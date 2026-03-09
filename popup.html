@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, system-ui, sans-serif; padding: 16px; width: 320px; color: #1a1a1a; }
+    h3 { font-size: 15px; margin-bottom: 12px; }
+
+    .domain-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .domain-input:focus { border-color: #4a90d9; }
+
+    .options { margin-top: 12px; }
+    .options label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .options input[type="checkbox"] { accent-color: #4a90d9; }
+
+    .select-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+    .select-actions a {
+      font-size: 11px;
+      color: #4a90d9;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    button#btn {
+      margin-top: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      width: 100%;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    button#btn:hover { background: #c9302c; }
+    button#btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    #status { margin-top: 10px; font-size: 12px; line-height: 1.4; }
+    .result-item { padding: 2px 0; }
+    .result-ok { color: #2e7d32; }
+    .result-err { color: #c62828; }
+
+    .protocol-toggle {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h3>Clear Domain Data</h3>
+
+  <input type="text" id="domain" class="domain-input" placeholder="example.com" />
+
+  <div class="protocol-toggle">
+    <label><input type="checkbox" id="includeHttp" /> Inclure HTTP</label>
+  </div>
+
+  <div class="options">
+    <div class="select-actions">
+      <a id="selectAll">Tout cocher</a>
+      <a id="selectNone">Tout décocher</a>
+    </div>
+    <label><input type="checkbox" class="opt" value="cache" checked /> Cache réseau</label>
+    <label><input type="checkbox" class="opt" value="cookies" checked /> Cookies</label>
+    <label><input type="checkbox" class="opt" value="localStorage" checked /> localStorage</label>
+    <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
+    <label><input type="checkbox" class="opt" value="serviceWorkers" checked /> Service Workers</label>
+    <label><input type="checkbox" class="opt" value="cacheStorage" checked /> Cache Storage (PWA)</label>
+  </div>
+
+  <button id="btn">Vider les données sélectionnées</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

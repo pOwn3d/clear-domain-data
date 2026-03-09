@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.zip
+*.crx
+*.pem
+
+# Original/temp icons
+icon-original.png
+icon-cropped.png
