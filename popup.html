@@ -1,65 +1,51 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, system-ui, sans-serif; padding: 16px; width: 320px; color: #1a1a1a; }
-    h3 { font-size: 15px; margin-bottom: 12px; }
+
+    body {
+      font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+      padding: 20px;
+      width: 340px;
+      color: #1a1a1a;
+      background: #fff;
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      body { background: #1e1e1e; color: #e0e0e0; }
+      .domain-input { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
+      .domain-input:focus { border-color: #5b9bd5; }
+      .options label { color: #ccc; }
+      .select-actions a { color: #5b9bd5; }
+      .protocol-toggle { color: #999; }
+      .separator { border-color: #333; }
+      button#btn { background: #c0392b; }
+      button#btn:hover { background: #a93226; }
+      button#btn:disabled { background: #444; color: #777; }
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .header img { width: 28px; height: 28px; }
+    .header h3 { font-size: 15px; font-weight: 700; }
 
     .domain-input {
       width: 100%;
-      padding: 8px 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 9px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
       font-size: 13px;
       outline: none;
+      transition: border-color 0.2s;
     }
-    .domain-input:focus { border-color: #4a90d9; }
-
-    .options { margin-top: 12px; }
-    .options label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 0;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .options input[type="checkbox"] { accent-color: #4a90d9; }
-
-    .select-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-      margin-bottom: 8px;
-    }
-    .select-actions a {
-      font-size: 11px;
-      color: #4a90d9;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
-    button#btn {
-      margin-top: 12px;
-      padding: 10px 16px;
-      cursor: pointer;
-      width: 100%;
-      background: #d9534f;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    button#btn:hover { background: #c9302c; }
-    button#btn:disabled { background: #ccc; cursor: not-allowed; }
-
-    #status { margin-top: 10px; font-size: 12px; line-height: 1.4; }
-    .result-item { padding: 2px 0; }
-    .result-ok { color: #2e7d32; }
-    .result-err { color: #c62828; }
+    .domain-input:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 
     .protocol-toggle {
       margin-top: 8px;
@@ -67,25 +53,122 @@
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      color: #666;
+      color: #888;
+    }
+
+    .separator {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 12px 0;
+    }
+
+    .options-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .options-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; }
+
+    .select-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .select-actions a {
+      font-size: 11px;
+      color: #4a90d9;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .select-actions a:hover { text-decoration: underline; }
+
+    .options label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .options label:hover { opacity: 0.8; }
+    .options input[type="checkbox"] { accent-color: #4a90d9; width: 15px; height: 15px; }
+
+    button#btn {
+      margin-top: 14px;
+      padding: 11px 16px;
+      cursor: pointer;
+      width: 100%;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button#btn:hover { background: #c9302c; }
+    button#btn:active { transform: scale(0.98); }
+    button#btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    .reload-option {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    #status {
+      margin-top: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .result-item {
+      padding: 3px 0;
+      animation: fadeIn 0.2s ease;
+    }
+    .result-ok { color: #2e7d32; }
+    .result-err { color: #c62828; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .result-ok { color: #66bb6a; }
+      .result-err { color: #ef5350; }
+      .options-title { color: #777; }
+      .reload-option { color: #999; }
     }
   </style>
 </head>
 <body>
-  <h3>Clear Domain Data</h3>
+  <div class="header">
+    <img src="icons/icon-48.png" alt="" />
+    <h3>Clear Domain Data</h3>
+  </div>
 
-  <input type="text" id="domain" class="domain-input" placeholder="example.com" />
+  <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
 
   <div class="protocol-toggle">
-    <label><input type="checkbox" id="includeHttp" /> Inclure HTTP</label>
+    <label><input type="checkbox" id="includeHttp" /> Include HTTP</label>
+  </div>
+
+  <hr class="separator" />
+
+  <div class="options-header">
+    <span class="options-title">Data to clear</span>
+    <div class="select-actions">
+      <a id="selectAll">All</a>
+      <a id="selectNone">None</a>
+    </div>
   </div>
 
   <div class="options">
-    <div class="select-actions">
-      <a id="selectAll">Tout cocher</a>
-      <a id="selectNone">Tout décocher</a>
-    </div>
-    <label><input type="checkbox" class="opt" value="cache" checked /> Cache réseau</label>
+    <label><input type="checkbox" class="opt" value="cache" checked /> Network Cache</label>
     <label><input type="checkbox" class="opt" value="cookies" checked /> Cookies</label>
     <label><input type="checkbox" class="opt" value="localStorage" checked /> localStorage</label>
     <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
@@ -93,7 +176,12 @@
     <label><input type="checkbox" class="opt" value="cacheStorage" checked /> Cache Storage (PWA)</label>
   </div>
 
-  <button id="btn">Vider les données sélectionnées</button>
+  <button id="btn">Clear selected data</button>
+
+  <div class="reload-option">
+    <label><input type="checkbox" id="autoReload" checked /> Reload tab after clearing</label>
+  </div>
+
   <div id="status"></div>
 
   <script src="popup.js"></script>

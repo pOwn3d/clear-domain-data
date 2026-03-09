@@ -8,7 +8,9 @@ const CLEAR_FUNCTIONS = {
 };
 
 const VALID_TYPES = new Set(Object.keys(CLEAR_FUNCTIONS));
-const DOMAIN_REGEX = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+
+// Supports standard domains, localhost, and IP addresses
+const DOMAIN_REGEX = /^(localhost|(\d{1,3}\.){3}\d{1,3}|([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})$/;
 
 function validateDomain(domain) {
   if (typeof domain !== "string" || domain.length === 0 || domain.length > 253) return false;
@@ -26,19 +28,17 @@ async function clearDomainData(domain, types, includeHttp) {
   const origins = [`https://${domain}`];
   if (includeHttp) origins.push(`http://${domain}`);
 
-  const results = [];
-
-  for (const type of types) {
+  const promises = types.map(async (type) => {
     const fn = CLEAR_FUNCTIONS[type];
     try {
       await chrome.browsingData[fn]({ origins });
-      results.push({ type, ok: true });
+      return { type, ok: true };
     } catch (e) {
-      results.push({ type, ok: false, error: e.message });
+      return { type, ok: false, error: e.message };
     }
-  }
+  });
 
-  return results;
+  return Promise.all(promises);
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {

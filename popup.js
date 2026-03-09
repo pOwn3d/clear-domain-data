@@ -3,18 +3,27 @@
   const btn = document.getElementById("btn");
   const statusEl = document.getElementById("status");
   const includeHttp = document.getElementById("includeHttp");
+  const autoReload = document.getElementById("autoReload");
 
-  // Pre-fill with active tab domain
+  const INTERNAL_PROTOCOLS = ["chrome:", "chrome-extension:", "edge:", "about:", "file:", "devtools:"];
+
+  // Pre-fill with active tab domain and auto-detect protocol
+  let activeTabId = null;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.url) {
       const url = new URL(tab.url);
-      if (url.hostname && !url.protocol.startsWith("chrome")) {
+      if (url.hostname && !INTERNAL_PROTOCOLS.includes(url.protocol)) {
         domainInput.value = url.hostname;
+        activeTabId = tab.id;
+        if (url.protocol === "http:") {
+          includeHttp.checked = true;
+        }
       }
     }
   } catch (_) {}
 
+  // Select all / none
   document.getElementById("selectAll").addEventListener("click", () => {
     document.querySelectorAll(".opt").forEach(cb => cb.checked = true);
   });
@@ -22,15 +31,21 @@
     document.querySelectorAll(".opt").forEach(cb => cb.checked = false);
   });
 
+  // Submit on Enter key
+  domainInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") btn.click();
+  });
+
   function showStatus(items) {
     statusEl.replaceChildren();
-    for (const item of items) {
+    items.forEach((item, i) => {
       const div = document.createElement("div");
       div.className = "result-item " + (item.ok ? "result-ok" : "result-err");
-      const label = item.ok ? "OK" : "ERREUR";
+      const label = item.ok ? "OK" : "ERR";
       div.textContent = `[${label}] ${item.type}${item.error ? " — " + item.error : ""}`;
+      div.style.animationDelay = `${i * 50}ms`;
       statusEl.appendChild(div);
-    }
+    });
   }
 
   function showError(message) {
@@ -44,32 +59,39 @@
   btn.addEventListener("click", () => {
     const domain = domainInput.value.trim();
     if (!domain) {
-      showError("Saisir un domaine");
+      showError("Enter a domain");
+      domainInput.focus();
       return;
     }
 
     const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
     if (types.length === 0) {
-      showError("Cocher au moins un type");
+      showError("Select at least one data type");
       return;
     }
 
     btn.disabled = true;
-    btn.textContent = "Nettoyage...";
+    btn.textContent = "Clearing...";
     statusEl.replaceChildren();
 
     chrome.runtime.sendMessage(
       { action: "clearDomain", domain, types, includeHttp: includeHttp.checked },
       (res) => {
         btn.disabled = false;
-        btn.textContent = "Vider les données sélectionnées";
+        btn.textContent = "Clear selected data";
 
         if (!res) {
-          showError("Pas de réponse du service worker");
+          showError("No response from service worker");
           return;
         }
 
         showStatus(res.results);
+
+        // Reload active tab if option is checked and all succeeded
+        const allOk = res.results.every(r => r.ok);
+        if (autoReload.checked && allOk && activeTabId) {
+          chrome.tabs.reload(activeTabId);
+        }
       }
     );
   });
