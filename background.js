@@ -101,37 +101,40 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   } catch (_) {}
 });
 
-// Keyboard shortcut: clear current domain
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command !== "clear-current-domain") return;
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.url) return;
-    const url = new URL(tab.url);
-    const domain = url.host;
-    if (!validateDomain(domain)) return;
+// Shortcut clear (from content script) and popup message handler
+async function handleShortcutClear(tabId) {
+  const [tab] = tabId
+    ? [{ id: tabId, url: (await chrome.tabs.get(tabId)).url }]
+    : await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.url) return;
 
-    const stored = await chrome.storage.local.get(STORAGE_KEY);
-    const prefs = stored[STORAGE_KEY] || {};
-    const types = prefs.types || ALL_TYPES;
-    const includeHttp = prefs.includeHttp || false;
-    const includeSubdomains = prefs.includeSubdomains || false;
+  const url = new URL(tab.url);
+  const domain = url.host;
+  if (!validateDomain(domain)) return;
 
-    const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
-    const allOk = results.every(r => r.ok);
+  const stored = await chrome.storage.local.get(STORAGE_KEY);
+  const prefs = stored[STORAGE_KEY] || {};
+  const types = prefs.types || ALL_TYPES;
+  const includeHttp = prefs.includeHttp || false;
+  const includeSubdomains = prefs.includeSubdomains || false;
 
-    chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
-    chrome.action.setBadgeBackgroundColor({ color: allOk ? "#2e7d32" : "#c62828", tabId: tab.id });
-    setTimeout(() => chrome.action.setBadgeText({ text: "", tabId: tab.id }), 2000);
+  const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
+  const allOk = results.every(r => r.ok);
 
-    if (allOk && (prefs.autoReload !== false)) {
-      chrome.tabs.reload(tab.id);
-    }
-  } catch (_) {}
-});
+  chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
+  chrome.action.setBadgeBackgroundColor({ color: allOk ? "#2e7d32" : "#c62828", tabId: tab.id });
+  setTimeout(() => chrome.action.setBadgeText({ text: "", tabId: tab.id }), 2000);
 
-// Message handler from popup
+  if (allOk && (prefs.autoReload !== false)) {
+    chrome.tabs.reload(tab.id);
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.action === "shortcutClear") {
+    handleShortcutClear(sender.tab?.id).catch(() => {});
+    return false;
+  }
   if (msg.action === "clearDomain") {
     clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains)
       .then(results => sendResponse({ results }))

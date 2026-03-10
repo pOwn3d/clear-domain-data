@@ -9,6 +9,8 @@
 
   const INTERNAL_PROTOCOLS = ["chrome:", "chrome-extension:", "edge:", "about:", "file:", "devtools:"];
   const STORAGE_KEY = "clearDomainPrefs";
+  const DEFAULT_SHORTCUT = { key: "x", meta: true, shift: true };
+  let currentShortcut = DEFAULT_SHORTCUT;
 
   // Load saved preferences
   try {
@@ -24,17 +26,20 @@
           cb.checked = prefs.types.includes(cb.value);
         });
       }
+      if (prefs.shortcut) currentShortcut = prefs.shortcut;
     }
   } catch (_) {}
 
   // Save preferences on change
-  function savePrefs() {
+  function savePrefs(extraFields) {
     const prefs = {
       includeHttp: includeHttp.checked,
       autoReload: autoReload.checked,
       autoClose: autoClose.checked,
       includeSubdomains: includeSubdomains.checked,
       types: [...document.querySelectorAll(".opt:checked")].map(cb => cb.value),
+      shortcut: currentShortcut,
+      ...extraFields,
     };
     chrome.storage.local.set({ [STORAGE_KEY]: prefs });
   }
@@ -107,6 +112,78 @@
     span.textContent = message;
     statusEl.appendChild(span);
   }
+
+  // Shortcut recorder
+  const shortcutBtn = document.getElementById("shortcutBtn");
+  const shortcutKeys = document.getElementById("shortcutKeys");
+  const shortcutReset = document.getElementById("shortcutReset");
+  const isMac = navigator.platform.includes("Mac");
+
+  function formatShortcut(sc) {
+    const parts = [];
+    if (sc.meta) parts.push(isMac ? "⌘" : "Win");
+    if (sc.ctrl) parts.push(isMac ? "⌃" : "Ctrl");
+    if (sc.alt) parts.push(isMac ? "⌥" : "Alt");
+    if (sc.shift) parts.push(isMac ? "⇧" : "Shift");
+    parts.push(sc.key.toUpperCase());
+    return parts.map(k => `<kbd>${k}</kbd>`).join(" ");
+  }
+
+  shortcutKeys.innerHTML = formatShortcut(currentShortcut);
+
+  let recording = false;
+
+  shortcutBtn.addEventListener("click", () => {
+    recording = true;
+    shortcutBtn.classList.add("recording");
+    shortcutKeys.innerHTML = '<span class="recording-text">Press keys…</span>';
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (!recording) return;
+    // Ignore lone modifier keys
+    if (["Meta", "Control", "Alt", "Shift"].includes(e.key)) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Require at least one modifier
+    if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+      shortcutKeys.innerHTML = '<span class="recording-text">Add a modifier key</span>';
+      return;
+    }
+
+    const sc = {
+      key: e.key.length === 1 ? e.key.toLowerCase() : e.key,
+      meta: e.metaKey || false,
+      ctrl: e.ctrlKey || false,
+      shift: e.shiftKey || false,
+      alt: e.altKey || false,
+    };
+
+    currentShortcut = sc;
+    recording = false;
+    shortcutBtn.classList.remove("recording");
+    shortcutKeys.innerHTML = formatShortcut(sc);
+    savePrefs({ shortcut: sc });
+  }, true);
+
+  // Cancel recording on click outside
+  document.addEventListener("click", (e) => {
+    if (recording && !shortcutBtn.contains(e.target)) {
+      recording = false;
+      shortcutBtn.classList.remove("recording");
+      shortcutKeys.innerHTML = formatShortcut(currentShortcut);
+    }
+  });
+
+  shortcutReset.addEventListener("click", () => {
+    currentShortcut = DEFAULT_SHORTCUT;
+    recording = false;
+    shortcutBtn.classList.remove("recording");
+    shortcutKeys.innerHTML = formatShortcut(currentShortcut);
+    savePrefs({ shortcut: DEFAULT_SHORTCUT });
+  });
 
   btn.addEventListener("click", () => {
     const domain = domainInput.value.trim();

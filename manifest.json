@@ -10,16 +10,12 @@
     "storage",
     "tabs"
   ],
-  "commands": {
-    "clear-current-domain": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+X",
-        "mac": "Command+Shift+X"
-      },
-      "description": "Clear data for the current domain"
-    }
-  },
   "host_permissions": ["<all_urls>"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_start"
+  }],
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",

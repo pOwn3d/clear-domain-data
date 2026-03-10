@@ -426,18 +426,53 @@
     }
 
     /* Keyboard shortcut hint */
-    .shortcut-hint {
+    .shortcut-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 6px;
       margin-top: 8px;
       font-size: 9px;
       color: var(--text-muted);
       letter-spacing: 0.3px;
     }
 
-    .shortcut-hint kbd {
+    .shortcut-label {
+      white-space: nowrap;
+    }
+
+    .shortcut-recorder {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 3px 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      min-width: 70px;
+      justify-content: center;
+    }
+
+    .shortcut-recorder:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    .shortcut-recorder.recording {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-dim);
+      animation: pulse 1.5s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 2px var(--accent-dim); }
+      50% { box-shadow: 0 0 0 4px var(--accent-dim); }
+    }
+
+    .shortcut-recorder kbd {
       display: inline-block;
       padding: 1px 5px;
       font-family: inherit;
@@ -448,6 +483,30 @@
       border: 1px solid var(--border);
       border-radius: 3px;
       line-height: 1.4;
+    }
+
+    .shortcut-recorder .recording-text {
+      font-size: 9px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .shortcut-reset {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: all 0.15s;
+      font-family: inherit;
+      line-height: 1;
+    }
+
+    .shortcut-reset:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
     }
   </style>
 </head>
@@ -498,8 +557,12 @@
 
     <div id="status"></div>
 
-    <div class="shortcut-hint">
-      Quick clear: <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>X</kbd>
+    <div class="shortcut-row">
+      <span class="shortcut-label">Quick clear:</span>
+      <button id="shortcutBtn" class="shortcut-recorder" title="Click to record a new shortcut">
+        <span id="shortcutKeys"><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>X</kbd></span>
+      </button>
+      <button id="shortcutReset" class="shortcut-reset" title="Reset to default">↺</button>
     </div>
   </div>
 
