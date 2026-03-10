@@ -3,186 +3,505 @@
 <head>
   <meta charset="UTF-8" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+      --bg-primary: #0c0c0e;
+      --bg-secondary: #141418;
+      --bg-tertiary: #1a1a20;
+      --bg-hover: #22222a;
+      --border: #2a2a35;
+      --border-focus: #ff4d4d;
+      --text-primary: #e8e6e3;
+      --text-secondary: #8a8a95;
+      --text-muted: #55555f;
+      --accent: #ff4d4d;
+      --accent-dim: rgba(255, 77, 77, 0.15);
+      --accent-glow: rgba(255, 77, 77, 0.3);
+      --success: #00e676;
+      --success-dim: rgba(0, 230, 118, 0.15);
+      --error: #ff5252;
+      --checkbox-bg: #1e1e26;
+      --checkbox-checked: #ff4d4d;
+      --tag-bg: rgba(255, 77, 77, 0.08);
+      --tag-border: rgba(255, 77, 77, 0.2);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f5f3f0;
+        --bg-secondary: #edeae6;
+        --bg-tertiary: #e5e2dd;
+        --bg-hover: #ddd9d4;
+        --border: #d0ccc6;
+        --border-focus: #d93636;
+        --text-primary: #1a1a1a;
+        --text-secondary: #6b6b6b;
+        --text-muted: #9a9a9a;
+        --accent: #d93636;
+        --accent-dim: rgba(217, 54, 54, 0.1);
+        --accent-glow: rgba(217, 54, 54, 0.2);
+        --success: #1b8a4a;
+        --success-dim: rgba(27, 138, 74, 0.1);
+        --error: #d93636;
+        --checkbox-bg: #e5e2dd;
+        --checkbox-checked: #d93636;
+        --tag-bg: rgba(217, 54, 54, 0.06);
+        --tag-border: rgba(217, 54, 54, 0.15);
+      }
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
-      padding: 20px;
-      width: 340px;
-      color: #1a1a1a;
-      background: #fff;
+      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Code', monospace;
+      width: 360px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      position: relative;
     }
 
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-      body { background: #1e1e1e; color: #e0e0e0; }
-      .domain-input { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
-      .domain-input:focus { border-color: #5b9bd5; }
-      .options label { color: #ccc; }
-      .select-actions a { color: #5b9bd5; }
-      .protocol-toggle { color: #999; }
-      .separator { border-color: #333; }
-      button#btn { background: #c0392b; }
-      button#btn:hover { background: #a93226; }
-      button#btn:disabled { background: #444; color: #777; }
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
     }
 
+    .container {
+      position: relative;
+      z-index: 1;
+      padding: 16px 18px 14px;
+    }
+
+    /* Header */
     .header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
     }
-    .header img { width: 28px; height: 28px; }
-    .header h3 { font-size: 15px; font-weight: 700; }
+
+    .header img {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      opacity: 0.9;
+    }
+
+    .header h3 {
+      font-family: 'Space Grotesk', 'IBM Plex Mono', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .header .version-tag {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Domain input */
+    .input-group {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--text-muted);
+      pointer-events: none;
+      user-select: none;
+    }
 
     .domain-input {
       width: 100%;
-      padding: 9px 12px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
-      font-size: 13px;
+      padding: 10px 12px 10px 14px;
+      background: var(--bg-secondary);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-primary);
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .domain-input:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 
+    .domain-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .domain-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-dim), inset 0 0 0 1px var(--accent-dim);
+    }
+
+    /* Toggle row */
     .protocol-toggle {
-      margin-top: 8px;
+      display: flex;
+      gap: 0;
+      margin-bottom: 12px;
+    }
+
+    .toggle-chip {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #888;
+      gap: 5px;
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
     }
 
-    .separator {
-      border: none;
-      border-top: 1px solid #eee;
-      margin: 12px 0;
+    .toggle-chip:first-child {
+      border-radius: 5px 0 0 5px;
     }
 
-    .options-header {
+    .toggle-chip:last-child {
+      border-radius: 0 5px 5px 0;
+      border-left: none;
+    }
+
+    .toggle-chip:hover {
+      background: var(--bg-hover);
+    }
+
+    .toggle-chip:has(input:checked) {
+      background: var(--accent-dim);
+      border-color: var(--tag-border);
+      color: var(--accent);
+    }
+
+    .toggle-chip input {
+      display: none;
+    }
+
+    /* Section */
+    .section-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-    .options-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #999; }
+
+    .section-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+    }
 
     .select-actions {
       display: flex;
-      gap: 8px;
+      gap: 2px;
     }
+
     .select-actions a {
-      font-size: 11px;
-      color: #4a90d9;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-secondary);
       cursor: pointer;
       text-decoration: none;
+      padding: 2px 7px;
+      border-radius: 3px;
+      transition: all 0.15s;
     }
-    .select-actions a:hover { text-decoration: underline; }
+
+    .select-actions a:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    /* Options grid */
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      margin-bottom: 12px;
+    }
 
     .options label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 5px 0;
-      font-size: 13px;
+      gap: 7px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: all 0.15s;
+      position: relative;
     }
-    .options label:hover { opacity: 0.8; }
-    .options input[type="checkbox"] { accent-color: #4a90d9; width: 15px; height: 15px; }
 
+    .options label:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .options label:has(input:checked) {
+      color: var(--text-primary);
+    }
+
+    /* Custom checkboxes */
+    .options input[type="checkbox"],
+    .bottom-options input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 3px;
+      background: var(--checkbox-bg);
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .options input[type="checkbox"]:checked,
+    .bottom-options input[type="checkbox"]:checked {
+      background: var(--checkbox-checked);
+      border-color: var(--checkbox-checked);
+    }
+
+    .options input[type="checkbox"]:checked::after,
+    .bottom-options input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 3.5px;
+      top: 1px;
+      width: 4px;
+      height: 7px;
+      border: solid var(--bg-primary);
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Clear button */
     button#btn {
-      margin-top: 14px;
-      padding: 11px 16px;
-      cursor: pointer;
       width: 100%;
-      background: #d9534f;
-      color: white;
+      padding: 10px 16px;
+      background: var(--accent);
+      color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      transition: background 0.2s, transform 0.1s;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', 'IBM Plex Mono', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
     }
-    button#btn:hover { background: #c9302c; }
-    button#btn:active { transform: scale(0.98); }
-    button#btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
-    .reload-option {
-      margin-top: 8px;
+    button#btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    button#btn:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    button#btn:active {
+      transform: translateY(0) scale(0.99);
+      filter: brightness(0.95);
+    }
+
+    button#btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+
+    /* Bottom options */
+    .bottom-options {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .bottom-options label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #888;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s;
+      white-space: nowrap;
     }
 
+    .bottom-options label:hover {
+      color: var(--text-secondary);
+    }
+
+    .bottom-options input[type="checkbox"] {
+      width: 12px;
+      height: 12px;
+    }
+
+    .bottom-options input[type="checkbox"]:checked::after {
+      left: 2.5px;
+      top: 0.5px;
+      width: 3.5px;
+      height: 6px;
+    }
+
+    /* Status */
     #status {
-      margin-top: 12px;
-      font-size: 12px;
-      line-height: 1.5;
+      margin-top: 10px;
+      font-size: 11px;
+      line-height: 1.6;
     }
+
     .result-item {
-      padding: 3px 0;
-      animation: fadeIn 0.2s ease;
-    }
-    .result-ok { color: #2e7d32; }
-    .result-err { color: #c62828; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
+      padding: 2px 0;
+      font-weight: 500;
+      animation: slideIn 0.25s ease both;
     }
 
-    @media (prefers-color-scheme: dark) {
-      .result-ok { color: #66bb6a; }
-      .result-err { color: #ef5350; }
-      .options-title { color: #777; }
-      .reload-option { color: #999; }
+    .result-ok { color: var(--success); }
+    .result-err { color: var(--error); }
+
+    .success-flash {
+      font-weight: 600;
+      font-size: 12px;
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Keyboard shortcut hint */
+    .shortcut-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    .shortcut-hint kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      font-family: inherit;
+      font-size: 8.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <img src="icons/icon-48.png" alt="" />
-    <h3>Clear Domain Data</h3>
-  </div>
+  <div class="container">
+    <div class="header">
+      <img src="icons/icon-48.png" alt="" />
+      <h3>Clear Domain Data</h3>
+      <span class="version-tag">v1.1</span>
+    </div>
 
-  <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
+    <div class="input-group">
+      <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
+    </div>
 
-  <div class="protocol-toggle">
-    <label><input type="checkbox" id="includeHttp" /> Include HTTP</label>
-  </div>
+    <div class="protocol-toggle">
+      <label class="toggle-chip">
+        <input type="checkbox" id="includeHttp" /> HTTP
+      </label>
+      <label class="toggle-chip">
+        <input type="checkbox" id="includeSubdomains" /> Subdomains
+      </label>
+    </div>
 
-  <hr class="separator" />
+    <div class="section-header">
+      <span class="section-label">Data types</span>
+      <div class="select-actions">
+        <a id="selectAll">All</a>
+        <a id="selectNone">None</a>
+      </div>
+    </div>
 
-  <div class="options-header">
-    <span class="options-title">Data to clear</span>
-    <div class="select-actions">
-      <a id="selectAll">All</a>
-      <a id="selectNone">None</a>
+    <div class="options">
+      <label><input type="checkbox" class="opt" value="cache" checked /> Cache</label>
+      <label><input type="checkbox" class="opt" value="cookies" checked /> Cookies</label>
+      <label><input type="checkbox" class="opt" value="localStorage" checked /> localStorage</label>
+      <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
+      <label><input type="checkbox" class="opt" value="serviceWorkers" checked /> SW</label>
+      <label><input type="checkbox" class="opt" value="cacheStorage" checked /> CacheStorage</label>
+    </div>
+
+    <button id="btn">Clear selected data</button>
+
+    <div class="bottom-options">
+      <label><input type="checkbox" id="autoReload" checked /> Reload tab</label>
+      <label><input type="checkbox" id="autoClose" checked /> Auto-close</label>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="shortcut-hint">
+      Quick clear: <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>X</kbd>
     </div>
   </div>
-
-  <div class="options">
-    <label><input type="checkbox" class="opt" value="cache" checked /> Network Cache</label>
-    <label><input type="checkbox" class="opt" value="cookies" checked /> Cookies</label>
-    <label><input type="checkbox" class="opt" value="localStorage" checked /> localStorage</label>
-    <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
-    <label><input type="checkbox" class="opt" value="serviceWorkers" checked /> Service Workers</label>
-    <label><input type="checkbox" class="opt" value="cacheStorage" checked /> Cache Storage (PWA)</label>
-  </div>
-
-  <button id="btn">Clear selected data</button>
-
-  <div class="reload-option">
-    <label><input type="checkbox" id="autoReload" checked /> Reload tab after clearing</label>
-  </div>
-
-  <div id="status"></div>
 
   <script src="popup.js"></script>
 </body>
