@@ -5,10 +5,11 @@ const CLEAR_FUNCTIONS = {
   indexedDB: "removeIndexedDB",
   serviceWorkers: "removeServiceWorkers",
   cacheStorage: "removeCacheStorage",
+  history: "removeHistory",
 };
 
-const VALID_TYPES = new Set(Object.keys(CLEAR_FUNCTIONS));
-const ALL_TYPES = Object.keys(CLEAR_FUNCTIONS);
+const VALID_TYPES = new Set([...Object.keys(CLEAR_FUNCTIONS), "sessionStorage"]);
+const ALL_TYPES = [...Object.keys(CLEAR_FUNCTIONS), "sessionStorage"];
 const STORAGE_KEY = "clearDomainPrefs";
 
 // Supports standard domains, localhost, IPs, and optional port
@@ -23,6 +24,15 @@ function validateTypes(types) {
   return Array.isArray(types) && types.length > 0 && types.every(t => VALID_TYPES.has(t));
 }
 
+async function trackRecentDomain(domain) {
+  const stored = await chrome.storage.local.get("recentDomains");
+  let recents = stored.recentDomains || [];
+  recents = recents.filter(d => d !== domain);
+  recents.unshift(domain);
+  recents = recents.slice(0, 10);
+  await chrome.storage.local.set({ recentDomains: recents });
+}
+
 async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
   if (!validateDomain(domain)) throw new Error("Invalid domain");
   if (!validateTypes(types)) throw new Error("Invalid data types");
@@ -30,8 +40,11 @@ async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
   const origins = [`https://${domain}`];
   if (includeHttp) origins.push(`http://${domain}`);
 
+  // Filter out sessionStorage since it's not a browsingData API type
+  const browsingDataTypes = types.filter(t => t in CLEAR_FUNCTIONS);
+
   // Clear exact domain
-  const results = await Promise.all(types.map(async (type) => {
+  const results = await Promise.all(browsingDataTypes.map(async (type) => {
     const fn = CLEAR_FUNCTIONS[type];
     try {
       await chrome.browsingData[fn]({ origins });
@@ -41,10 +54,15 @@ async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
     }
   }));
 
+  // sessionStorage is handled via content script, just report success here
+  if (types.includes("sessionStorage")) {
+    results.push({ type: "sessionStorage", ok: true });
+  }
+
   // Clear subdomain cookies if requested
   if (includeSubdomains) {
     const baseDomain = domain.replace(/:\d+$/, "");
-    const subResults = await Promise.all(types.map(async (type) => {
+    const subResults = await Promise.all(browsingDataTypes.map(async (type) => {
       try {
         if (type === "cookies") {
           const cookies = await chrome.cookies.getAll({ domain: baseDomain });
@@ -90,10 +108,29 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
     const allOk = results.every(r => r.ok);
 
+    if (types.includes("sessionStorage")) {
+      try {
+        await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
+      } catch (_) {}
+    }
+
     // Show badge feedback
     chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
     chrome.action.setBadgeBackgroundColor({ color: allOk ? "#2e7d32" : "#c62828", tabId: tab.id });
     setTimeout(() => chrome.action.setBadgeText({ text: "", tabId: tab.id }), 2000);
+
+    const showNotif = prefs.showNotification !== false;
+    if (showNotif) {
+      chrome.notifications.create({
+        type: "basic",
+        iconUrl: "icons/icon-128.png",
+        title: "Clear Domain Data",
+        message: allOk ? `Cleared ${domain}` : `Error clearing ${domain}`,
+        silent: true,
+      });
+    }
+
+    if (allOk) await trackRecentDomain(domain);
 
     if (allOk && (prefs.autoReload !== false)) {
       chrome.tabs.reload(tab.id);
@@ -121,9 +158,28 @@ async function handleShortcutClear(tabId) {
   const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
   const allOk = results.every(r => r.ok);
 
+  if (types.includes("sessionStorage")) {
+    try {
+      await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
+    } catch (_) {}
+  }
+
   chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
   chrome.action.setBadgeBackgroundColor({ color: allOk ? "#2e7d32" : "#c62828", tabId: tab.id });
   setTimeout(() => chrome.action.setBadgeText({ text: "", tabId: tab.id }), 2000);
+
+  const showNotif = prefs.showNotification !== false;
+  if (showNotif) {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon-128.png",
+      title: "Clear Domain Data",
+      message: allOk ? `Cleared ${domain}` : `Error clearing ${domain}`,
+      silent: true,
+    });
+  }
+
+  if (allOk) await trackRecentDomain(domain);
 
   if (allOk && (prefs.autoReload !== false)) {
     chrome.tabs.reload(tab.id);
@@ -137,8 +193,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   if (msg.action === "clearDomain") {
     clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains)
-      .then(results => sendResponse({ results }))
+      .then(async (results) => {
+        if (msg.types.includes("sessionStorage")) {
+          try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab) await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
+          } catch (_) {}
+        }
+        const allOk = results.every(r => r.ok);
+        if (allOk) await trackRecentDomain(msg.domain);
+        sendResponse({ results });
+      })
       .catch(e => sendResponse({ results: [{ type: "global", ok: false, error: e.message }] }));
+    return true;
+  }
+  if (msg.action === "getCookieCount") {
+    chrome.cookies.getAll({ domain: msg.domain })
+      .then(cookies => sendResponse({ count: cookies.length }))
+      .catch(() => sendResponse({ count: 0 }));
+    return true;
+  }
+  if (msg.action === "getRecentDomains") {
+    chrome.storage.local.get("recentDomains")
+      .then(stored => sendResponse({ recents: stored.recentDomains || [] }))
+      .catch(() => sendResponse({ recents: [] }));
     return true;
   }
 });

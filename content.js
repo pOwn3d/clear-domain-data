@@ -32,3 +32,9 @@ document.addEventListener("keydown", (e) => {
 
   chrome.runtime.sendMessage({ action: "shortcutClear" });
 }, true);
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === "clearSessionStorage") {
+    try { sessionStorage.clear(); } catch (_) {}
+  }
+});

@@ -357,6 +357,7 @@
     /* Bottom options */
     .bottom-options {
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
       margin-top: 10px;
       padding-top: 10px;
@@ -508,6 +509,142 @@
       color: var(--text-secondary);
       background: var(--bg-hover);
     }
+
+    /* Recent domains */
+    .recents-wrapper {
+      margin-bottom: 10px;
+    }
+
+    .recents-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .recent-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .recent-chip:hover {
+      background: var(--accent-dim);
+      border-color: var(--tag-border);
+      color: var(--accent);
+    }
+
+    .clear-recents {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      padding: 2px 7px;
+      border-radius: 3px;
+      transition: all 0.15s;
+    }
+
+    .clear-recents:hover {
+      color: var(--error);
+      background: var(--bg-hover);
+    }
+
+    /* Cookie counter */
+    .cookie-count {
+      display: block;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-muted);
+      min-height: 14px;
+    }
+
+    /* Confirmation modal */
+    .confirm-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .confirm-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      text-align: center;
+      width: 260px;
+    }
+
+    .confirm-content p {
+      font-size: 12px;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .confirm-yes {
+      flex: 1;
+      padding: 7px 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .confirm-yes:hover {
+      filter: brightness(1.1);
+    }
+
+    .confirm-no {
+      flex: 1;
+      padding: 7px 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .confirm-no:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
   </style>
 </head>
 <body>
@@ -518,8 +655,17 @@
       <span class="version-tag">v1.2</span>
     </div>
 
+    <div id="recentsWrapper" class="recents-wrapper" style="display:none;">
+      <div class="section-header">
+        <span class="section-label">Recent</span>
+        <a id="clearRecents" class="clear-recents">Clear</a>
+      </div>
+      <div id="recentsList" class="recents-list"></div>
+    </div>
+
     <div class="input-group">
       <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
+      <span id="cookieCount" class="cookie-count"></span>
     </div>
 
     <div class="protocol-toggle">
@@ -546,6 +692,8 @@
       <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
       <label><input type="checkbox" class="opt" value="serviceWorkers" checked /> SW</label>
       <label><input type="checkbox" class="opt" value="cacheStorage" checked /> CacheStorage</label>
+      <label><input type="checkbox" class="opt" value="sessionStorage" checked /> sessionStorage</label>
+      <label><input type="checkbox" class="opt" value="history" /> History</label>
     </div>
 
     <button id="btn">Clear selected data</button>
@@ -553,6 +701,8 @@
     <div class="bottom-options">
       <label><input type="checkbox" id="autoReload" checked /> Reload tab</label>
       <label><input type="checkbox" id="autoClose" checked /> Auto-close</label>
+      <label><input type="checkbox" id="confirmClear" /> Confirm before clear</label>
+      <label><input type="checkbox" id="showNotification" checked /> Notify on shortcut</label>
     </div>
 
     <div id="status"></div>
@@ -563,6 +713,16 @@
         <span id="shortcutKeys"><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>X</kbd></span>
       </button>
       <button id="shortcutReset" class="shortcut-reset" title="Reset to default">↺</button>
+    </div>
+
+    <div id="confirmModal" class="confirm-modal" style="display:none;">
+      <div class="confirm-content">
+        <p>Clear data for <strong id="confirmDomain"></strong>?</p>
+        <div class="confirm-actions">
+          <button id="confirmYes" class="confirm-yes">Clear</button>
+          <button id="confirmNo" class="confirm-no">Cancel</button>
+        </div>
+      </div>
     </div>
   </div>
 

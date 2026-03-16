@@ -6,6 +6,16 @@
   const autoReload = document.getElementById("autoReload");
   const includeSubdomains = document.getElementById("includeSubdomains");
   const autoClose = document.getElementById("autoClose");
+  const confirmClear = document.getElementById("confirmClear");
+  const showNotification = document.getElementById("showNotification");
+  const recentsWrapper = document.getElementById("recentsWrapper");
+  const recentsList = document.getElementById("recentsList");
+  const clearRecents = document.getElementById("clearRecents");
+  const cookieCountEl = document.getElementById("cookieCount");
+  const confirmModal = document.getElementById("confirmModal");
+  const confirmDomain = document.getElementById("confirmDomain");
+  const confirmYes = document.getElementById("confirmYes");
+  const confirmNo = document.getElementById("confirmNo");
 
   const INTERNAL_PROTOCOLS = ["chrome:", "chrome-extension:", "edge:", "about:", "file:", "devtools:"];
   const STORAGE_KEY = "clearDomainPrefs";
@@ -21,6 +31,8 @@
       if (prefs.autoReload != null) autoReload.checked = prefs.autoReload;
       if (prefs.autoClose != null) autoClose.checked = prefs.autoClose;
       if (prefs.includeSubdomains != null) includeSubdomains.checked = prefs.includeSubdomains;
+      if (prefs.confirmClear != null) confirmClear.checked = prefs.confirmClear;
+      if (prefs.showNotification != null) showNotification.checked = prefs.showNotification;
       if (prefs.types) {
         document.querySelectorAll(".opt").forEach(cb => {
           cb.checked = prefs.types.includes(cb.value);
@@ -37,6 +49,8 @@
       autoReload: autoReload.checked,
       autoClose: autoClose.checked,
       includeSubdomains: includeSubdomains.checked,
+      confirmClear: confirmClear.checked,
+      showNotification: showNotification.checked,
       types: [...document.querySelectorAll(".opt:checked")].map(cb => cb.value),
       shortcut: currentShortcut,
       ...extraFields,
@@ -45,7 +59,7 @@
   }
 
   // Listen for preference changes
-  [includeHttp, autoReload, autoClose, includeSubdomains].forEach(el => {
+  [includeHttp, autoReload, autoClose, includeSubdomains, confirmClear, showNotification].forEach(el => {
     el.addEventListener("change", savePrefs);
   });
   document.querySelectorAll(".opt").forEach(cb => cb.addEventListener("change", savePrefs));
@@ -69,6 +83,57 @@
   // Auto-focus and select domain input
   domainInput.focus();
   domainInput.select();
+
+  // Cookie counter
+  let cookieCountTimeout;
+  function updateCookieCount() {
+    const domain = domainInput.value.trim();
+    if (!domain) { cookieCountEl.textContent = ""; return; }
+    clearTimeout(cookieCountTimeout);
+    cookieCountTimeout = setTimeout(() => {
+      chrome.runtime.sendMessage({ action: "getCookieCount", domain }, (res) => {
+        if (res?.count > 0) {
+          cookieCountEl.textContent = `${res.count} cookie${res.count > 1 ? "s" : ""} found`;
+        } else {
+          cookieCountEl.textContent = "";
+        }
+      });
+    }, 300);
+  }
+
+  domainInput.addEventListener("input", updateCookieCount);
+  updateCookieCount();
+
+  // Recent domains
+  function loadRecents() {
+    chrome.runtime.sendMessage({ action: "getRecentDomains" }, (res) => {
+      const recents = res?.recents || [];
+      if (recents.length === 0) {
+        recentsWrapper.style.display = "none";
+        return;
+      }
+      recentsWrapper.style.display = "block";
+      recentsList.innerHTML = "";
+      recents.forEach(domain => {
+        const chip = document.createElement("span");
+        chip.className = "recent-chip";
+        chip.textContent = domain;
+        chip.title = domain;
+        chip.addEventListener("click", () => {
+          domainInput.value = domain;
+          updateCookieCount();
+        });
+        recentsList.appendChild(chip);
+      });
+    });
+  }
+
+  loadRecents();
+
+  clearRecents.addEventListener("click", () => {
+    chrome.storage.local.set({ recentDomains: [] });
+    recentsWrapper.style.display = "none";
+  });
 
   // Select all / none
   document.getElementById("selectAll").addEventListener("click", () => {
@@ -185,19 +250,9 @@
     savePrefs({ shortcut: DEFAULT_SHORTCUT });
   });
 
-  btn.addEventListener("click", () => {
+  function executeClear() {
     const domain = domainInput.value.trim();
-    if (!domain) {
-      showError("Enter a domain");
-      domainInput.focus();
-      return;
-    }
-
     const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
-    if (types.length === 0) {
-      showError("Select at least one data type");
-      return;
-    }
 
     btn.disabled = true;
     btn.textContent = "Clearing...";
@@ -222,10 +277,10 @@
         const allOk = res.results.every(r => r.ok);
 
         if (allOk && autoClose.checked) {
-          // Show brief success feedback, reload tab, then close popup
           showSuccess();
           btn.textContent = "Done!";
           btn.style.background = "#2e7d32";
+          loadRecents();
 
           if (autoReload.checked && activeTabId) {
             chrome.tabs.reload(activeTabId);
@@ -233,10 +288,11 @@
 
           setTimeout(() => window.close(), 600);
         } else {
-          // Show detailed results (errors or autoClose disabled)
           btn.disabled = false;
           btn.textContent = "Clear selected data";
           showStatus(res.results);
+
+          if (allOk) loadRecents();
 
           if (autoReload.checked && allOk && activeTabId) {
             chrome.tabs.reload(activeTabId);
@@ -244,5 +300,36 @@
         }
       }
     );
+  }
+
+  btn.addEventListener("click", () => {
+    const domain = domainInput.value.trim();
+    if (!domain) {
+      showError("Enter a domain");
+      domainInput.focus();
+      return;
+    }
+
+    const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
+    if (types.length === 0) {
+      showError("Select at least one data type");
+      return;
+    }
+
+    if (confirmClear.checked) {
+      confirmDomain.textContent = domain;
+      confirmModal.style.display = "flex";
+    } else {
+      executeClear();
+    }
+  });
+
+  confirmYes.addEventListener("click", () => {
+    confirmModal.style.display = "none";
+    executeClear();
+  });
+
+  confirmNo.addEventListener("click", () => {
+    confirmModal.style.display = "none";
   });
 })();
