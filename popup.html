@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
-
     :root {
+      --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Liberation Mono', monospace;
+      --font-sans: -apple-system, 'Segoe UI', system-ui, sans-serif;
       --bg-primary: #0c0c0e;
       --bg-secondary: #141418;
       --bg-tertiary: #1a1a20;
@@ -54,7 +54,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'IBM Plex Mono', 'SF Mono', 'Fira Code', monospace;
+      font-family: var(--font-mono);
       width: 360px;
       background: var(--bg-primary);
       color: var(--text-primary);
@@ -100,7 +100,7 @@
     }
 
     .header h3 {
-      font-family: 'Space Grotesk', 'IBM Plex Mono', sans-serif;
+      font-family: var(--font-sans);
       font-size: 14px;
       font-weight: 700;
       letter-spacing: -0.3px;
@@ -316,7 +316,7 @@
       color: #fff;
       border: none;
       border-radius: 6px;
-      font-family: 'Space Grotesk', 'IBM Plex Mono', sans-serif;
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.5px;
