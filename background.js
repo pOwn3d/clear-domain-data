@@ -5,11 +5,11 @@ const CLEAR_FUNCTIONS = {
   indexedDB: "removeIndexedDB",
   serviceWorkers: "removeServiceWorkers",
   cacheStorage: "removeCacheStorage",
-  history: "removeHistory",
 };
 
-const VALID_TYPES = new Set([...Object.keys(CLEAR_FUNCTIONS), "sessionStorage"]);
-const ALL_TYPES = [...Object.keys(CLEAR_FUNCTIONS), "sessionStorage"];
+const EXTRA_TYPES = ["sessionStorage", "history"];
+const VALID_TYPES = new Set([...Object.keys(CLEAR_FUNCTIONS), ...EXTRA_TYPES]);
+const ALL_TYPES = [...Object.keys(CLEAR_FUNCTIONS), ...EXTRA_TYPES];
 const STORAGE_KEY = "clearDomainPrefs";
 
 // Supports standard domains, localhost, IPs, and optional port
@@ -57,6 +57,20 @@ async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
   // sessionStorage is handled via content script, just report success here
   if (types.includes("sessionStorage")) {
     results.push({ type: "sessionStorage", ok: true });
+  }
+
+  // History: use chrome.history API to delete URLs matching the domain
+  if (types.includes("history")) {
+    try {
+      const items = await chrome.history.search({ text: domain, startTime: 0, maxResults: 10000 });
+      const matching = items.filter(item => {
+        try { return new URL(item.url).host === domain; } catch (_) { return false; }
+      });
+      await Promise.all(matching.map(item => chrome.history.deleteUrl({ url: item.url })));
+      results.push({ type: "history", ok: true });
+    } catch (e) {
+      results.push({ type: "history", ok: false, error: e.message });
+    }
   }
 
   // Clear subdomain cookies if requested
