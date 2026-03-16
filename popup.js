@@ -253,53 +253,46 @@
   function executeClear() {
     const domain = domainInput.value.trim();
     const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
+    const msg = {
+      action: "clearDomain",
+      domain,
+      types,
+      includeHttp: includeHttp.checked,
+      includeSubdomains: includeSubdomains.checked,
+      autoReload: autoReload.checked,
+    };
 
+    // Fire-and-forget: close popup immediately, background handles the rest
+    if (autoClose.checked) {
+      chrome.runtime.sendMessage(msg);
+      window.close();
+      return;
+    }
+
+    // Stay open: wait for results
     btn.disabled = true;
     btn.textContent = "Clearing...";
     statusEl.replaceChildren();
 
-    chrome.runtime.sendMessage(
-      {
-        action: "clearDomain",
-        domain,
-        types,
-        includeHttp: includeHttp.checked,
-        includeSubdomains: includeSubdomains.checked,
-      },
-      (res) => {
-        if (!res) {
-          btn.disabled = false;
-          btn.textContent = "Clear selected data";
-          showError("No response from service worker");
-          return;
-        }
-
-        const allOk = res.results.every(r => r.ok);
-
-        if (allOk && autoClose.checked) {
-          showSuccess();
-          btn.textContent = "Done!";
-          btn.style.background = "#2e7d32";
-          loadRecents();
-
-          if (autoReload.checked && activeTabId) {
-            chrome.tabs.reload(activeTabId);
-          }
-
-          setTimeout(() => window.close(), 600);
-        } else {
-          btn.disabled = false;
-          btn.textContent = "Clear selected data";
-          showStatus(res.results);
-
-          if (allOk) loadRecents();
-
-          if (autoReload.checked && allOk && activeTabId) {
-            chrome.tabs.reload(activeTabId);
-          }
-        }
+    chrome.runtime.sendMessage(msg, (res) => {
+      if (!res) {
+        btn.disabled = false;
+        btn.textContent = "Clear selected data";
+        showError("No response from service worker");
+        return;
       }
-    );
+
+      const allOk = res.results.every(r => r.ok);
+      btn.disabled = false;
+      btn.textContent = "Clear selected data";
+      showStatus(res.results);
+
+      if (allOk) loadRecents();
+
+      if (autoReload.checked && allOk && activeTabId) {
+        chrome.tabs.reload(activeTabId);
+      }
+    });
   }
 
   btn.addEventListener("click", () => {

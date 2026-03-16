@@ -208,14 +208,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "clearDomain") {
     clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains)
       .then(async (results) => {
-        if (msg.types.includes("sessionStorage")) {
-          try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab) await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
-          } catch (_) {}
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []);
+        if (msg.types.includes("sessionStorage") && tab) {
+          try { await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" }); } catch (_) {}
         }
         const allOk = results.every(r => r.ok);
         if (allOk) await trackRecentDomain(msg.domain);
+
+        // Reload tab from background (popup may already be closed)
+        if (msg.autoReload && allOk && tab) {
+          chrome.tabs.reload(tab.id);
+        }
+
         sendResponse({ results });
       })
       .catch(e => sendResponse({ results: [{ type: "global", ok: false, error: e.message }] }));
