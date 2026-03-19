@@ -36,8 +36,13 @@ async function trackRecentDomain(domain) {
 async function sendOverlay(tabId, state) {
   try {
     const stored = await chrome.storage.local.get(STORAGE_KEY);
-    const loaderStyle = stored[STORAGE_KEY]?.loaderStyle || "spinner";
-    chrome.tabs.sendMessage(tabId, { action: "showOverlay", state, loaderStyle });
+    const prefs = stored[STORAGE_KEY] || {};
+    chrome.tabs.sendMessage(tabId, {
+      action: "showOverlay",
+      state,
+      loaderStyle: prefs.loaderStyle || "spinner",
+      lang: prefs.lang || "en",
+    });
   } catch (_) {}
 }
 

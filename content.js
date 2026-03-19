@@ -35,11 +35,27 @@ document.addEventListener("keydown", (e) => {
   chrome.runtime.sendMessage({ action: "shortcutClear" });
 }, true);
 
-// ── Loader definitions ──
+// ── i18n for loader texts ──
 
-const LOADERS = {
+const LOADER_TEXTS = {
+  en: { spinner: "Clearing…", pacman: "Eating data…", broom: "Sweeping…", matrix: "Purging…", nuke: "Nuking…", fire: "Burning data…", bounce: "Clearing…" },
+  fr: { spinner: "Suppression…", pacman: "Miam miam…", broom: "Nettoyage…", matrix: "Purge…", nuke: "Destruction…", fire: "Ça brûle…", bounce: "Suppression…" },
+  es: { spinner: "Borrando…", pacman: "Comiendo datos…", broom: "Barriendo…", matrix: "Purgando…", nuke: "Destruyendo…", fire: "Quemando…", bounce: "Borrando…" },
+  de: { spinner: "Lösche…", pacman: "Frisst Daten…", broom: "Fegt…", matrix: "Bereinige…", nuke: "Zerstöre…", fire: "Verbrennt…", bounce: "Lösche…" },
+  pt: { spinner: "Limpando…", pacman: "Comendo dados…", broom: "Varrendo…", matrix: "Purgando…", nuke: "Destruindo…", fire: "Queimando…", bounce: "Limpando…" },
+};
+
+function getLoaderText(style, lang) {
+  return (LOADER_TEXTS[lang] || LOADER_TEXTS.en)[style] || LOADER_TEXTS.en[style] || "Clearing…";
+}
+
+// ── Loader definitions (functions returning HTML with translated text) ──
+
+function getLoaders(lang) {
+  const txt = (style) => getLoaderText(style, lang);
+  return {
   spinner: {
-    clearing: `<div class="__cdd_spinner"></div><div class="__cdd_text">Clearing…</div>`,
+    clearing: `<div class="__cdd_spinner"></div><div class="__cdd_text">${txt("spinner")}</div>`,
     css: `
       .__cdd_spinner {
         width: 28px; height: 28px;
@@ -60,7 +76,7 @@ const LOADERS = {
           <span></span><span></span><span></span><span></span><span></span><span></span>
         </div>
       </div>
-      <div class="__cdd_text">Eating data…</div>
+      <div class="__cdd_text">${txt("pacman")}</div>
     `,
     css: `
       .__cdd_pacman_scene { display: flex; align-items: center; gap: 4px; height: 32px; }
@@ -109,7 +125,7 @@ const LOADERS = {
       <div class="__cdd_dust">
         <span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span>
       </div>
-      <div class="__cdd_text">Sweeping…</div>
+      <div class="__cdd_text">${txt("broom")}</div>
     `,
     css: `
       .__cdd_broom {
@@ -145,7 +161,7 @@ const LOADERS = {
         <span>0</span><span>1</span><span>C</span><span>0</span><span>0</span>
         <span>K</span><span>1</span><span>E</span><span>0</span><span>1</span>
       </div>
-      <div class="__cdd_text" style="color:#00e676;">Purging…</div>
+      <div class="__cdd_text" style="color:#00e676;">${txt("matrix")}</div>
     `,
     css: `
       .__cdd_matrix {
@@ -179,7 +195,7 @@ const LOADERS = {
     clearing: `
       <div class="__cdd_nuke">💥</div>
       <div class="__cdd_shockwave"></div>
-      <div class="__cdd_text">Nuking…</div>
+      <div class="__cdd_text">${txt("nuke")}</div>
     `,
     css: `
       .__cdd_nuke {
@@ -209,7 +225,7 @@ const LOADERS = {
       <div class="__cdd_fire">
         <span>🔥</span><span>🔥</span><span>🔥</span>
       </div>
-      <div class="__cdd_text">Burning data…</div>
+      <div class="__cdd_text">${txt("fire")}</div>
     `,
     css: `
       .__cdd_fire { display: flex; gap: 2px; }
@@ -232,7 +248,7 @@ const LOADERS = {
       <div class="__cdd_bounce_dots">
         <span></span><span></span><span></span>
       </div>
-      <div class="__cdd_text">Clearing…</div>
+      <div class="__cdd_text">${txt("bounce")}</div>
     `,
     css: `
       .__cdd_bounce_dots { display: flex; gap: 8px; }
@@ -251,14 +267,16 @@ const LOADERS = {
     `,
   },
 };
+}
 
 // ── Overlay system ──
 
 let overlay = null;
 
-function showOverlay(state, style) {
+function showOverlay(state, style, lang) {
   removeOverlay();
-  const loader = LOADERS[style] || LOADERS.spinner;
+  const loaders = getLoaders(lang || "en");
+  const loader = loaders[style] || loaders.spinner;
 
   overlay = document.createElement("div");
   overlay.id = "__cdd_overlay";
@@ -342,6 +360,6 @@ chrome.runtime.onMessage.addListener((msg) => {
     try { sessionStorage.clear(); } catch (_) {}
   }
   if (msg.action === "showOverlay") {
-    showOverlay(msg.state, msg.loaderStyle || loaderStyle);
+    showOverlay(msg.state, msg.loaderStyle || loaderStyle, msg.lang);
   }
 });

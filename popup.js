@@ -17,11 +17,126 @@
   const confirmYes = document.getElementById("confirmYes");
   const confirmNo = document.getElementById("confirmNo");
 
+  const langSelect = document.getElementById("langSelect");
+
   const INTERNAL_PROTOCOLS = ["chrome:", "chrome-extension:", "edge:", "about:", "file:", "devtools:"];
   const STORAGE_KEY = "clearDomainPrefs";
   const DEFAULT_SHORTCUT = { key: "x", meta: true, shift: true };
   let currentShortcut = DEFAULT_SHORTCUT;
   let currentLoader = "spinner";
+  let currentLang = "en";
+
+  // i18n translations
+  const I18N = {
+    en: {
+      recentLabel: "Recent", clearRecents: "Clear", dataTypes: "Data types",
+      all: "All", none: "None", clearBtn: "Clear selected data",
+      clearing: "Clearing...", done: "Done!",
+      reloadTab: "Reload tab", autoClose: "Auto-close",
+      confirmBefore: "Confirm before clear", notifyShortcut: "Notify on shortcut",
+      loader: "Loader:", quickClear: "Quick clear:",
+      confirmMsg: "Clear data for", confirmYes: "Clear", confirmNo: "Cancel",
+      enterDomain: "Enter a domain", selectType: "Select at least one data type",
+      noResponse: "No response from service worker", success: "Data cleared successfully",
+      cookiesFound: "{n} cookie{s} found",
+      http: "HTTP", subdomains: "Subdomains",
+      // Loader texts
+      l_spinner: "Clearing…", l_pacman: "Eating data…", l_broom: "Sweeping…",
+      l_matrix: "Purging…", l_nuke: "Nuking…", l_fire: "Burning data…", l_bounce: "Clearing…",
+    },
+    fr: {
+      recentLabel: "Récents", clearRecents: "Effacer", dataTypes: "Types de données",
+      all: "Tout", none: "Aucun", clearBtn: "Effacer les données",
+      clearing: "Suppression...", done: "Terminé !",
+      reloadTab: "Recharger l'onglet", autoClose: "Fermeture auto",
+      confirmBefore: "Confirmer avant", notifyShortcut: "Notifier au raccourci",
+      loader: "Animation :", quickClear: "Raccourci :",
+      confirmMsg: "Effacer les données de", confirmYes: "Effacer", confirmNo: "Annuler",
+      enterDomain: "Entrez un domaine", selectType: "Sélectionnez au moins un type",
+      noResponse: "Pas de réponse du service worker", success: "Données effacées",
+      cookiesFound: "{n} cookie{s} trouvé{s}",
+      http: "HTTP", subdomains: "Sous-domaines",
+      l_spinner: "Suppression…", l_pacman: "Miam miam…", l_broom: "Nettoyage…",
+      l_matrix: "Purge…", l_nuke: "Destruction…", l_fire: "Ça brûle…", l_bounce: "Suppression…",
+    },
+    es: {
+      recentLabel: "Recientes", clearRecents: "Borrar", dataTypes: "Tipos de datos",
+      all: "Todo", none: "Nada", clearBtn: "Borrar datos",
+      clearing: "Borrando...", done: "¡Listo!",
+      reloadTab: "Recargar pestaña", autoClose: "Cierre auto",
+      confirmBefore: "Confirmar antes", notifyShortcut: "Notificar al atajo",
+      loader: "Animación:", quickClear: "Atajo rápido:",
+      confirmMsg: "¿Borrar datos de", confirmYes: "Borrar", confirmNo: "Cancelar",
+      enterDomain: "Ingrese un dominio", selectType: "Seleccione al menos un tipo",
+      noResponse: "Sin respuesta del service worker", success: "Datos borrados",
+      cookiesFound: "{n} cookie{s} encontrada{s}",
+      http: "HTTP", subdomains: "Subdominios",
+      l_spinner: "Borrando…", l_pacman: "Comiendo datos…", l_broom: "Barriendo…",
+      l_matrix: "Purgando…", l_nuke: "Destruyendo…", l_fire: "Quemando…", l_bounce: "Borrando…",
+    },
+    de: {
+      recentLabel: "Zuletzt", clearRecents: "Löschen", dataTypes: "Datentypen",
+      all: "Alle", none: "Keine", clearBtn: "Daten löschen",
+      clearing: "Lösche...", done: "Fertig!",
+      reloadTab: "Tab neu laden", autoClose: "Auto-Schließen",
+      confirmBefore: "Vorher bestätigen", notifyShortcut: "Bei Shortcut benachrichtigen",
+      loader: "Animation:", quickClear: "Schnelltaste:",
+      confirmMsg: "Daten löschen für", confirmYes: "Löschen", confirmNo: "Abbrechen",
+      enterDomain: "Domain eingeben", selectType: "Mindestens einen Typ auswählen",
+      noResponse: "Keine Antwort vom Service Worker", success: "Daten gelöscht",
+      cookiesFound: "{n} Cookie{s} gefunden",
+      http: "HTTP", subdomains: "Subdomains",
+      l_spinner: "Lösche…", l_pacman: "Frisst Daten…", l_broom: "Fegt…",
+      l_matrix: "Bereinige…", l_nuke: "Zerstöre…", l_fire: "Verbrennt…", l_bounce: "Lösche…",
+    },
+    pt: {
+      recentLabel: "Recentes", clearRecents: "Limpar", dataTypes: "Tipos de dados",
+      all: "Todos", none: "Nenhum", clearBtn: "Limpar dados",
+      clearing: "Limpando...", done: "Pronto!",
+      reloadTab: "Recarregar aba", autoClose: "Fechar auto",
+      confirmBefore: "Confirmar antes", notifyShortcut: "Notificar no atalho",
+      loader: "Animação:", quickClear: "Atalho rápido:",
+      confirmMsg: "Limpar dados de", confirmYes: "Limpar", confirmNo: "Cancelar",
+      enterDomain: "Digite um domínio", selectType: "Selecione pelo menos um tipo",
+      noResponse: "Sem resposta do service worker", success: "Dados limpos",
+      cookiesFound: "{n} cookie{s} encontrado{s}",
+      http: "HTTP", subdomains: "Subdomínios",
+      l_spinner: "Limpando…", l_pacman: "Comendo dados…", l_broom: "Varrendo…",
+      l_matrix: "Purgando…", l_nuke: "Destruindo…", l_fire: "Queimando…", l_bounce: "Limpando…",
+    },
+  };
+
+  function t(key) { return (I18N[currentLang] || I18N.en)[key] || I18N.en[key] || key; }
+
+  function applyLang() {
+    // Section labels
+    document.querySelectorAll(".section-label").forEach((el, i) => {
+      if (i === 0) el.textContent = t("recentLabel");
+      if (i === 1) el.textContent = t("dataTypes");
+    });
+    clearRecents.textContent = t("clearRecents");
+    document.getElementById("selectAll").textContent = t("all");
+    document.getElementById("selectNone").textContent = t("none");
+    btn.textContent = t("clearBtn");
+
+    // Bottom options - update text nodes only
+    autoReload.parentElement.lastChild.textContent = " " + t("reloadTab");
+    autoClose.parentElement.lastChild.textContent = " " + t("autoClose");
+    confirmClear.parentElement.lastChild.textContent = " " + t("confirmBefore");
+    showNotification.parentElement.lastChild.textContent = " " + t("notifyShortcut");
+
+    // Toggle chips
+    includeHttp.parentElement.lastChild.textContent = " " + t("http");
+    includeSubdomains.parentElement.lastChild.textContent = " " + t("subdomains");
+
+    // Loader & shortcut labels
+    document.querySelector(".loader-label").textContent = t("loader");
+    document.querySelector(".shortcut-label").textContent = t("quickClear");
+
+    // Confirm modal
+    confirmYes.textContent = t("confirmYes");
+    confirmNo.textContent = t("confirmNo");
+  }
 
   // Load saved preferences
   try {
@@ -41,8 +156,19 @@
       }
       if (prefs.shortcut) currentShortcut = prefs.shortcut;
       if (prefs.loaderStyle) currentLoader = prefs.loaderStyle;
+      if (prefs.lang) currentLang = prefs.lang;
     }
   } catch (_) {}
+
+  // Apply language
+  langSelect.value = currentLang;
+  applyLang();
+
+  langSelect.addEventListener("change", () => {
+    currentLang = langSelect.value;
+    applyLang();
+    savePrefs({ lang: currentLang });
+  });
 
   // Save preferences on change
   function savePrefs(extraFields) {
@@ -56,6 +182,7 @@
       types: [...document.querySelectorAll(".opt:checked")].map(cb => cb.value),
       shortcut: currentShortcut,
       loaderStyle: currentLoader,
+      lang: currentLang,
       ...extraFields,
     };
     chrome.storage.local.set({ [STORAGE_KEY]: prefs });
@@ -96,7 +223,8 @@
     cookieCountTimeout = setTimeout(() => {
       chrome.runtime.sendMessage({ action: "getCookieCount", domain }, (res) => {
         if (res?.count > 0) {
-          cookieCountEl.textContent = `${res.count} cookie${res.count > 1 ? "s" : ""} found`;
+          const s = res.count > 1 ? "s" : "";
+          cookieCountEl.textContent = t("cookiesFound").replace("{n}", res.count).replace(/{s}/g, s);
         } else {
           cookieCountEl.textContent = "";
         }
@@ -169,7 +297,7 @@
     statusEl.replaceChildren();
     const div = document.createElement("div");
     div.className = "result-item result-ok success-flash";
-    div.textContent = "Data cleared successfully";
+    div.textContent = t("success");
     statusEl.appendChild(div);
   }
 
@@ -289,20 +417,20 @@
 
     // Stay open: wait for results
     btn.disabled = true;
-    btn.textContent = "Clearing...";
+    btn.textContent = t("clearing");
     statusEl.replaceChildren();
 
     chrome.runtime.sendMessage(msg, (res) => {
       if (!res) {
         btn.disabled = false;
-        btn.textContent = "Clear selected data";
-        showError("No response from service worker");
+        btn.textContent = t("clearBtn");
+        showError(t("noResponse"));
         return;
       }
 
       const allOk = res.results.every(r => r.ok);
       btn.disabled = false;
-      btn.textContent = "Clear selected data";
+      btn.textContent = t("clearBtn");
       showStatus(res.results);
 
       if (allOk) loadRecents();
@@ -316,19 +444,19 @@
   btn.addEventListener("click", () => {
     const domain = domainInput.value.trim();
     if (!domain) {
-      showError("Enter a domain");
+      showError(t("enterDomain"));
       domainInput.focus();
       return;
     }
 
     const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
     if (types.length === 0) {
-      showError("Select at least one data type");
+      showError(t("selectType"));
       return;
     }
 
     if (confirmClear.checked) {
-      confirmDomain.textContent = domain;
+      document.querySelector(".confirm-content p").innerHTML = `${t("confirmMsg")} <strong>${domain}</strong>?`;
       confirmModal.style.display = "flex";
     } else {
       executeClear();
