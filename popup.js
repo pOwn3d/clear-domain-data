@@ -21,6 +21,7 @@
   const STORAGE_KEY = "clearDomainPrefs";
   const DEFAULT_SHORTCUT = { key: "x", meta: true, shift: true };
   let currentShortcut = DEFAULT_SHORTCUT;
+  let currentLoader = "spinner";
 
   // Load saved preferences
   try {
@@ -42,8 +43,6 @@
       if (prefs.loaderStyle) currentLoader = prefs.loaderStyle;
     }
   } catch (_) {}
-
-  let currentLoader = "spinner";
 
   // Save preferences on change
   function savePrefs(extraFields) {
