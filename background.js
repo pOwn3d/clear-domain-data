@@ -33,6 +33,10 @@ async function trackRecentDomain(domain) {
   await chrome.storage.local.set({ recentDomains: recents });
 }
 
+function sendOverlay(tabId, state) {
+  try { chrome.tabs.sendMessage(tabId, { action: "showOverlay", state }); } catch (_) {}
+}
+
 async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
   if (!validateDomain(domain)) throw new Error("Invalid domain");
   if (!validateTypes(types)) throw new Error("Invalid data types");
@@ -119,6 +123,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     const includeHttp = prefs.includeHttp || false;
     const includeSubdomains = prefs.includeSubdomains || false;
 
+    sendOverlay(tab.id, "clearing");
+
     const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
     const allOk = results.every(r => r.ok);
 
@@ -127,6 +133,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
       } catch (_) {}
     }
+
+    sendOverlay(tab.id, allOk ? "success" : "error");
 
     // Show badge feedback
     chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
@@ -169,6 +177,8 @@ async function handleShortcutClear(tabId) {
   const includeHttp = prefs.includeHttp || false;
   const includeSubdomains = prefs.includeSubdomains || false;
 
+  sendOverlay(tab.id, "clearing");
+
   const results = await clearDomainData(domain, types, includeHttp, includeSubdomains);
   const allOk = results.every(r => r.ok);
 
@@ -177,6 +187,8 @@ async function handleShortcutClear(tabId) {
       await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" });
     } catch (_) {}
   }
+
+  sendOverlay(tab.id, allOk ? "success" : "error");
 
   chrome.action.setBadgeText({ text: allOk ? "✓" : "✗", tabId: tab.id });
   chrome.action.setBadgeBackgroundColor({ color: allOk ? "#2e7d32" : "#c62828", tabId: tab.id });
@@ -206,23 +218,26 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return false;
   }
   if (msg.action === "clearDomain") {
-    clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains)
-      .then(async (results) => {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []);
-        if (msg.types.includes("sessionStorage") && tab) {
-          try { await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" }); } catch (_) {}
-        }
-        const allOk = results.every(r => r.ok);
-        if (allOk) await trackRecentDomain(msg.domain);
+    (async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []);
+      if (tab) sendOverlay(tab.id, "clearing");
 
-        // Reload tab from background (popup may already be closed)
-        if (msg.autoReload && allOk && tab) {
-          chrome.tabs.reload(tab.id);
-        }
+      const results = await clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains);
 
-        sendResponse({ results });
-      })
-      .catch(e => sendResponse({ results: [{ type: "global", ok: false, error: e.message }] }));
+      if (msg.types.includes("sessionStorage") && tab) {
+        try { await chrome.tabs.sendMessage(tab.id, { action: "clearSessionStorage" }); } catch (_) {}
+      }
+
+      const allOk = results.every(r => r.ok);
+      if (tab) sendOverlay(tab.id, allOk ? "success" : "error");
+      if (allOk) await trackRecentDomain(msg.domain);
+
+      if (msg.autoReload && allOk && tab) {
+        chrome.tabs.reload(tab.id);
+      }
+
+      sendResponse({ results });
+    })().catch(e => sendResponse({ results: [{ type: "global", ok: false, error: e.message }] }));
     return true;
   }
   if (msg.action === "getCookieCount") {
