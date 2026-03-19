@@ -39,8 +39,11 @@
         });
       }
       if (prefs.shortcut) currentShortcut = prefs.shortcut;
+      if (prefs.loaderStyle) currentLoader = prefs.loaderStyle;
     }
   } catch (_) {}
+
+  let currentLoader = "spinner";
 
   // Save preferences on change
   function savePrefs(extraFields) {
@@ -53,6 +56,7 @@
       showNotification: showNotification.checked,
       types: [...document.querySelectorAll(".opt:checked")].map(cb => cb.value),
       shortcut: currentShortcut,
+      loaderStyle: currentLoader,
       ...extraFields,
     };
     chrome.storage.local.set({ [STORAGE_KEY]: prefs });
@@ -177,6 +181,21 @@
     span.textContent = message;
     statusEl.appendChild(span);
   }
+
+  // Loader picker
+  const loaderBtns = document.querySelectorAll(".loader-pick");
+  loaderBtns.forEach(btn => {
+    if (btn.dataset.loader === currentLoader) {
+      loaderBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+    btn.addEventListener("click", () => {
+      loaderBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentLoader = btn.dataset.loader;
+      savePrefs({ loaderStyle: currentLoader });
+    });
+  });
 
   // Shortcut recorder
   const shortcutBtn = document.getElementById("shortcutBtn");

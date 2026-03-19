@@ -33,8 +33,12 @@ async function trackRecentDomain(domain) {
   await chrome.storage.local.set({ recentDomains: recents });
 }
 
-function sendOverlay(tabId, state) {
-  try { chrome.tabs.sendMessage(tabId, { action: "showOverlay", state }); } catch (_) {}
+async function sendOverlay(tabId, state) {
+  try {
+    const stored = await chrome.storage.local.get(STORAGE_KEY);
+    const loaderStyle = stored[STORAGE_KEY]?.loaderStyle || "spinner";
+    chrome.tabs.sendMessage(tabId, { action: "showOverlay", state, loaderStyle });
+  } catch (_) {}
 }
 
 async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
