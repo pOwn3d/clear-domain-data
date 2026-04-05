@@ -161,7 +161,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       });
     }
 
-    if (allOk) await trackRecentDomain(domain);
+    await trackRecentDomain(domain);
 
     if (allOk && (prefs.autoReload !== false)) {
       chrome.tabs.reload(tab.id);
@@ -239,7 +239,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
       const allOk = results.every(r => r.ok);
       if (tab) sendOverlay(tab.id, allOk ? "success" : "error");
-      if (allOk) await trackRecentDomain(msg.domain);
+      await trackRecentDomain(msg.domain);
 
       if (msg.autoReload && allOk && tab) {
         chrome.tabs.reload(tab.id);
