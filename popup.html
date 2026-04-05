@@ -143,23 +143,70 @@
 
     /* Domain input */
     .input-group {
-      position: relative;
       margin-bottom: 8px;
     }
 
-    .input-prefix {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+    .domain-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .domain-tags:empty {
+      display: none;
+    }
+
+    .domain-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 6px 3px 8px;
       font-size: 11px;
-      color: var(--text-muted);
-      pointer-events: none;
-      user-select: none;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid var(--tag-border);
+      border-radius: 4px;
+      max-width: 180px;
+      animation: __tagIn 0.15s ease;
+    }
+
+    @keyframes __tagIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .domain-tag span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .domain-tag-remove {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      opacity: 0.6;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+
+    .domain-tag-remove:hover {
+      opacity: 1;
+    }
+
+    .domain-input-row {
+      display: flex;
+      gap: 4px;
     }
 
     .domain-input {
-      width: 100%;
+      flex: 1;
       padding: 10px 12px 10px 14px;
       background: var(--bg-secondary);
       border: 1.5px solid var(--border);
@@ -179,6 +226,28 @@
     .domain-input:focus {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px var(--accent-dim), inset 0 0 0 1px var(--accent-dim);
+    }
+
+    .add-domain-btn {
+      width: 38px;
+      background: var(--bg-secondary);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-domain-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
     }
 
     /* Toggle row */
@@ -743,7 +812,11 @@
     </div>
 
     <div class="input-group">
-      <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
+      <div id="domainTags" class="domain-tags"></div>
+      <div class="domain-input-row">
+        <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
+        <button id="addDomain" class="add-domain-btn" title="Add domain">+</button>
+      </div>
       <span id="cookieCount" class="cookie-count"></span>
     </div>
 

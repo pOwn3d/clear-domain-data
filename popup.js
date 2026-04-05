@@ -1,5 +1,7 @@
 (async () => {
   const domainInput = document.getElementById("domain");
+  const domainTags = document.getElementById("domainTags");
+  const addDomainBtn = document.getElementById("addDomain");
   const btn = document.getElementById("btn");
   const statusEl = document.getElementById("status");
   const includeHttp = document.getElementById("includeHttp");
@@ -214,6 +216,51 @@
   domainInput.focus();
   domainInput.select();
 
+  // ── Multi-domain tag system ──
+  let domains = [];
+
+  function addDomainTag(domain) {
+    domain = domain.trim();
+    if (!domain || domains.includes(domain)) return;
+    domains.push(domain);
+    renderTags();
+    domainInput.value = "";
+    domainInput.focus();
+    updateCookieCount();
+  }
+
+  function removeDomainTag(domain) {
+    domains = domains.filter(d => d !== domain);
+    renderTags();
+  }
+
+  function renderTags() {
+    domainTags.innerHTML = "";
+    domains.forEach(d => {
+      const tag = document.createElement("span");
+      tag.className = "domain-tag";
+      const label = document.createElement("span");
+      label.textContent = d;
+      label.title = d;
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "domain-tag-remove";
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => removeDomainTag(d));
+      tag.appendChild(label);
+      tag.appendChild(removeBtn);
+      domainTags.appendChild(tag);
+    });
+  }
+
+  // Add current tab domain as first tag if detected
+  if (domainInput.value) {
+    addDomainTag(domainInput.value);
+  }
+
+  addDomainBtn.addEventListener("click", () => {
+    addDomainTag(domainInput.value);
+  });
+
   // Cookie counter
   let cookieCountTimeout;
   function updateCookieCount() {
@@ -251,8 +298,7 @@
         chip.textContent = domain;
         chip.title = domain;
         chip.addEventListener("click", () => {
-          domainInput.value = domain;
-          updateCookieCount();
+          addDomainTag(domain);
         });
         recentsList.appendChild(chip);
       });
@@ -276,9 +322,19 @@
     savePrefs();
   });
 
-  // Submit on Enter key
+  // Enter key: add tag if input has value, otherwise trigger clear
   domainInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") btn.click();
+    if (e.key === "Enter") {
+      if (domainInput.value.trim()) {
+        addDomainTag(domainInput.value);
+      } else if (domains.length > 0) {
+        btn.click();
+      }
+    }
+    // Backspace on empty input removes last tag
+    if (e.key === "Backspace" && !domainInput.value && domains.length > 0) {
+      removeDomainTag(domains[domains.length - 1]);
+    }
   });
 
   function showStatus(items) {
@@ -396,21 +452,29 @@
     savePrefs({ shortcut: DEFAULT_SHORTCUT });
   });
 
+  function getTargetDomains() {
+    // Add any remaining input as a domain
+    const input = domainInput.value.trim();
+    if (input && !domains.includes(input)) {
+      addDomainTag(input);
+    }
+    return [...domains];
+  }
+
   function executeClear() {
-    const domain = domainInput.value.trim();
+    const targetDomains = getTargetDomains();
     const types = [...document.querySelectorAll(".opt:checked")].map(cb => cb.value);
-    const msg = {
-      action: "clearDomain",
-      domain,
-      types,
-      includeHttp: includeHttp.checked,
-      includeSubdomains: includeSubdomains.checked,
-      autoReload: autoReload.checked,
-    };
 
     // Fire-and-forget: close popup immediately, background handles the rest
     if (autoClose.checked) {
-      chrome.runtime.sendMessage(msg);
+      targetDomains.forEach(domain => {
+        chrome.runtime.sendMessage({
+          action: "clearDomain", domain, types,
+          includeHttp: includeHttp.checked,
+          includeSubdomains: includeSubdomains.checked,
+          autoReload: autoReload.checked,
+        });
+      });
       window.close();
       return;
     }
@@ -420,30 +484,40 @@
     btn.textContent = t("clearing");
     statusEl.replaceChildren();
 
-    chrome.runtime.sendMessage(msg, (res) => {
-      if (!res) {
-        btn.disabled = false;
-        btn.textContent = t("clearBtn");
-        showError(t("noResponse"));
-        return;
-      }
+    let completed = 0;
+    const allResults = [];
 
-      const allOk = res.results.every(r => r.ok);
-      btn.disabled = false;
-      btn.textContent = t("clearBtn");
-      showStatus(res.results);
+    targetDomains.forEach(domain => {
+      chrome.runtime.sendMessage({
+        action: "clearDomain", domain, types,
+        includeHttp: includeHttp.checked,
+        includeSubdomains: includeSubdomains.checked,
+        autoReload: autoReload.checked,
+      }, (res) => {
+        completed++;
+        if (res?.results) {
+          res.results.forEach(r => {
+            allResults.push({ ...r, type: `${domain} → ${r.type}` });
+          });
+        }
 
-      if (allOk) loadRecents();
-
-      if (autoReload.checked && allOk && activeTabId) {
-        chrome.tabs.reload(activeTabId);
-      }
+        if (completed === targetDomains.length) {
+          const allOk = allResults.every(r => r.ok);
+          btn.disabled = false;
+          btn.textContent = t("clearBtn");
+          showStatus(allResults);
+          if (allOk) loadRecents();
+          if (autoReload.checked && allOk && activeTabId) {
+            chrome.tabs.reload(activeTabId);
+          }
+        }
+      });
     });
   }
 
   btn.addEventListener("click", () => {
-    const domain = domainInput.value.trim();
-    if (!domain) {
+    const targetDomains = getTargetDomains();
+    if (targetDomains.length === 0) {
       showError(t("enterDomain"));
       domainInput.focus();
       return;
@@ -456,7 +530,10 @@
     }
 
     if (confirmClear.checked) {
-      document.querySelector(".confirm-content p").innerHTML = `${t("confirmMsg")} <strong>${domain}</strong>?`;
+      const domainList = targetDomains.length === 1
+        ? `<strong>${targetDomains[0]}</strong>`
+        : `<strong>${targetDomains.length} domains</strong>`;
+      document.querySelector(".confirm-content p").innerHTML = `${t("confirmMsg")} ${domainList}?`;
       confirmModal.style.display = "flex";
     } else {
       executeClear();
