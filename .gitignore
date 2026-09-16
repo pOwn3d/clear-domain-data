@@ -2,6 +2,8 @@
 .DS_Store
 Thumbs.db
 Icon?
+# "Icon?" also matches the icons/ folder on case-insensitive filesystems
+!icons/
 
 
 # Build artifacts
