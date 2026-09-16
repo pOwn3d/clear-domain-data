@@ -46,6 +46,31 @@ async function sendOverlay(tabId, state) {
   } catch (_) {}
 }
 
+// Reload the tab to the domain root instead of the current URL.
+// Reloading the current URL can keep the user stuck on a redirecting page
+// (e.g. /wp-admin/ bouncing to login once the session is cleared, or a
+// redirect loop). Navigating to the root brings them back to the site itself.
+async function reloadTabToRoot(tabId) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab?.url) { chrome.tabs.reload(tabId); return; }
+    const url = new URL(tab.url);
+    // Non-web pages (chrome://, file://, etc.): just reload, no root to go to
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      chrome.tabs.reload(tabId);
+      return;
+    }
+    const atRoot = url.pathname === "/" && !url.search && !url.hash;
+    if (atRoot) {
+      chrome.tabs.reload(tabId);
+    } else {
+      await chrome.tabs.update(tabId, { url: `${url.protocol}//${url.host}/` });
+    }
+  } catch (_) {
+    try { chrome.tabs.reload(tabId); } catch (_) {}
+  }
+}
+
 async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
   if (!validateDomain(domain)) throw new Error("Invalid domain");
   if (!validateTypes(types)) throw new Error("Invalid data types");
@@ -164,7 +189,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     await trackRecentDomain(domain);
 
     if (allOk && (prefs.autoReload !== false)) {
-      chrome.tabs.reload(tab.id);
+      reloadTabToRoot(tab.id);
     }
   } catch (_) {}
 });
@@ -217,7 +242,7 @@ async function handleShortcutClear(tabId) {
   if (allOk) await trackRecentDomain(domain);
 
   if (allOk && (prefs.autoReload !== false)) {
-    chrome.tabs.reload(tab.id);
+    reloadTabToRoot(tab.id);
   }
 }
 
@@ -242,7 +267,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       await trackRecentDomain(msg.domain);
 
       if (msg.autoReload && allOk && tab) {
-        chrome.tabs.reload(tab.id);
+        reloadTabToRoot(tab.id);
       }
 
       sendResponse({ results });
