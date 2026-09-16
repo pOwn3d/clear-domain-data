@@ -4,892 +4,1005 @@
   <meta charset="UTF-8" />
   <style>
     :root {
-      --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', 'Liberation Mono', monospace;
-      --font-sans: -apple-system, 'Segoe UI', system-ui, sans-serif;
-      --bg-primary: #0c0c0e;
-      --bg-secondary: #141418;
-      --bg-tertiary: #1a1a20;
-      --bg-hover: #22222a;
-      --border: #2a2a35;
-      --border-focus: #ff4d4d;
-      --text-primary: #e8e6e3;
-      --text-secondary: #8a8a95;
-      --text-muted: #55555f;
-      --accent: #ff4d4d;
-      --accent-dim: rgba(255, 77, 77, 0.15);
-      --accent-glow: rgba(255, 77, 77, 0.3);
-      --success: #00e676;
-      --success-dim: rgba(0, 230, 118, 0.15);
-      --error: #ff5252;
-      --checkbox-bg: #1e1e26;
-      --checkbox-checked: #ff4d4d;
-      --tag-bg: rgba(255, 77, 77, 0.08);
-      --tag-border: rgba(255, 77, 77, 0.2);
+      color-scheme: dark;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+      --bg: #0f0f12;
+      --surface: #17171c;
+      --surface-2: #202027;
+      --border: #2a2a33;
+      --border-strong: #3b3b47;
+      --text: #ecebe8;
+      --text-2: #a9a9b3;
+      --text-3: #85858f;
+      --accent: #ff6b5e;
+      --accent-fill: #d63a30;
+      --accent-soft: rgba(255, 107, 94, 0.12);
+      --accent-line: rgba(255, 107, 94, 0.38);
+      --accent-glow: rgba(214, 58, 48, 0.35);
+      --ok: #4ade80;
+      --ok-soft: rgba(74, 222, 128, 0.12);
+      --ok-line: rgba(74, 222, 128, 0.3);
+      --err: #ff6b5e;
+      --err-soft: rgba(255, 107, 94, 0.12);
+      --overlay: rgba(6, 6, 8, 0.72);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg-primary: #f5f3f0;
-        --bg-secondary: #edeae6;
-        --bg-tertiary: #e5e2dd;
-        --bg-hover: #ddd9d4;
-        --border: #d0ccc6;
-        --border-focus: #d93636;
-        --text-primary: #1a1a1a;
-        --text-secondary: #6b6b6b;
-        --text-muted: #9a9a9a;
-        --accent: #d93636;
-        --accent-dim: rgba(217, 54, 54, 0.1);
-        --accent-glow: rgba(217, 54, 54, 0.2);
-        --success: #1b8a4a;
-        --success-dim: rgba(27, 138, 74, 0.1);
-        --error: #d93636;
-        --checkbox-bg: #e5e2dd;
-        --checkbox-checked: #d93636;
-        --tag-bg: rgba(217, 54, 54, 0.06);
-        --tag-border: rgba(217, 54, 54, 0.15);
+        color-scheme: light;
+        --bg: #f6f4f1;
+        --surface: #ffffff;
+        --surface-2: #efece8;
+        --border: #e2ded8;
+        --border-strong: #cdc8c0;
+        --text: #1b1a19;
+        --text-2: #55524e;
+        --text-3: #6b6864;
+        --accent: #c2342a;
+        --accent-fill: #c2342a;
+        --accent-soft: rgba(194, 52, 42, 0.08);
+        --accent-line: rgba(194, 52, 42, 0.32);
+        --accent-glow: rgba(194, 52, 42, 0.25);
+        --ok: #177a3e;
+        --ok-soft: rgba(23, 122, 62, 0.1);
+        --ok-line: rgba(23, 122, 62, 0.25);
+        --err: #c2342a;
+        --err-soft: rgba(194, 52, 42, 0.08);
+        --overlay: rgba(27, 26, 25, 0.35);
+        --shadow: 0 20px 50px rgba(27, 26, 25, 0.18);
       }
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Author display rules must not override the hidden attribute */
+    [hidden] { display: none !important; }
 
     body {
-      font-family: var(--font-mono);
       width: 360px;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    button, input, select { font: inherit; color: inherit; }
+    button { background: none; border: 0; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
       overflow: hidden;
-      position: relative;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
 
-    /* Subtle grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.15;
-      pointer-events: none;
-      z-index: 0;
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      color: var(--text-2);
+      transition: background 0.15s, color 0.15s;
     }
 
-    .container {
-      position: relative;
-      z-index: 1;
-      padding: 16px 18px 14px;
+    .icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    .text-btn {
+      flex-shrink: 0;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: var(--text-2);
+      transition: background 0.15s, color 0.15s;
     }
+
+    .text-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    .secondary-btn {
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+
+    .secondary-btn:hover { border-color: var(--border-strong); }
 
     /* Header */
-    .header {
+    .header { border-bottom: 1px solid var(--border); }
+
+    .header-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      height: 52px;
+      padding: 0 10px 0 16px;
     }
 
-    .header img {
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      opacity: 0.9;
-    }
+    .header-logo { width: 24px; height: 24px; border-radius: 6px; }
 
-    .header h3 {
-      font-family: var(--font-sans);
+    .header-title {
       font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: var(--text-primary);
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
     }
 
-    .header .version-tag {
-      margin-left: auto;
-      font-size: 9px;
-      font-weight: 500;
-      color: var(--accent);
-      background: var(--tag-bg);
-      border: 1px solid var(--tag-border);
-      padding: 2px 6px;
-      border-radius: 3px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .lang-select {
-      margin-left: 4px;
-      padding: 2px 4px;
-      font-family: inherit;
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: var(--bg-secondary);
+    .version-tag {
+      padding: 2px 7px;
       border: 1px solid var(--border);
-      border-radius: 3px;
-      cursor: pointer;
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      text-align: center;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-3);
     }
 
-    .lang-select:hover {
-      border-color: var(--text-muted);
-    }
+    .header-action { margin-left: auto; }
+    .back-btn { margin-left: -8px; }
 
-    /* Domain input */
-    .input-group {
-      margin-bottom: 8px;
-    }
-
-    .domain-tags {
+    /* Views & sections */
+    .view {
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 6px;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px 16px 16px;
     }
 
-    .domain-tags:empty {
-      display: none;
+    .section { display: flex; flex-direction: column; gap: 8px; }
+
+    .section-header { display: flex; align-items: center; gap: 8px; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      white-space: nowrap;
     }
 
+    .section-meta { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+
+    .section-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+    .section-count.is-empty { color: var(--err); }
+
+    /* Domain field */
+    .domain-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .domain-field:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .domain-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .domain-tags:empty { display: none; }
+
+    /* Compact enough for two usual domains on one row: Chrome caps popups at 600px */
     .domain-tag {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 6px 3px 8px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--accent);
-      background: var(--accent-dim);
-      border: 1px solid var(--tag-border);
-      border-radius: 4px;
-      max-width: 180px;
-      animation: __tagIn 0.15s ease;
+      gap: 5px;
+      max-width: 100%;
+      height: 26px;
+      padding: 0 2px 0 8px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-line);
+      border-radius: 7px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      animation: tag-in 0.15s ease;
     }
 
-    @keyframes __tagIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
+    .domain-tag::before {
+      content: '';
+      flex-shrink: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
     }
 
-    .domain-tag span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .domain-tag-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .domain-tag-remove {
-      background: none;
-      border: none;
-      color: var(--accent);
-      font-size: 13px;
-      cursor: pointer;
-      padding: 0 2px;
-      line-height: 1;
-      opacity: 0.6;
-      font-family: inherit;
-      transition: opacity 0.15s;
-    }
-
-    .domain-tag-remove:hover {
-      opacity: 1;
-    }
-
-    .domain-input-row {
       display: flex;
-      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      color: var(--text-2);
     }
+
+    .domain-tag-remove:hover { background: var(--surface-2); color: var(--text); }
+
+    .domain-input-row { display: flex; align-items: center; gap: 6px; }
 
     .domain-input {
       flex: 1;
-      padding: 10px 12px 10px 14px;
-      background: var(--bg-secondary);
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 12.5px;
-      font-weight: 500;
-      color: var(--text-primary);
+      min-width: 0;
+      height: 32px;
+      padding: 0 8px;
+      background: transparent;
+      border: 0;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
     }
 
-    .domain-input::placeholder {
-      color: var(--text-muted);
-    }
+    .domain-input::placeholder { color: var(--text-3); }
 
-    .domain-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px var(--accent-dim), inset 0 0 0 1px var(--accent-dim);
-    }
+    /* The whole field already shows a focus ring */
+    .domain-input:focus-visible { outline: none; }
 
-    .add-domain-btn {
-      width: 38px;
-      background: var(--bg-secondary);
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-size: 18px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-      display: flex;
+    .add-domain-btn { border: 1px solid var(--border); border-radius: 7px; }
+
+    /* Scope chips (HTTP, subdomains) */
+    .scope-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .scope-chip {
+      position: relative;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-    }
-
-    .add-domain-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-
-    /* Toggle row */
-    .protocol-toggle {
-      display: flex;
-      gap: 0;
-      margin-bottom: 12px;
-    }
-
-    .toggle-chip {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 10px;
-      font-size: 10.5px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      background: var(--bg-secondary);
+      gap: 6px;
+      height: 28px;
+      padding: 0 11px 0 9px;
       border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.15s;
-      user-select: none;
-    }
-
-    .toggle-chip:first-child {
-      border-radius: 5px 0 0 5px;
-    }
-
-    .toggle-chip:last-child {
-      border-radius: 0 5px 5px 0;
-      border-left: none;
-    }
-
-    .toggle-chip:hover {
-      background: var(--bg-hover);
-    }
-
-    .toggle-chip:has(input:checked) {
-      background: var(--accent-dim);
-      border-color: var(--tag-border);
-      color: var(--accent);
-    }
-
-    .toggle-chip input {
-      display: none;
-    }
-
-    /* Section */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-
-    .section-label {
-      font-size: 9.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--text-muted);
-    }
-
-    .select-actions {
-      display: flex;
-      gap: 2px;
-    }
-
-    .select-actions a {
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-decoration: none;
-      padding: 2px 7px;
-      border-radius: 3px;
-      transition: all 0.15s;
-    }
-
-    .select-actions a:hover {
-      color: var(--text-primary);
-      background: var(--bg-hover);
-    }
-
-    /* Options grid */
-    .options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3px;
-      margin-bottom: 12px;
-    }
-
-    .options label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 8px;
-      border-radius: 5px;
-      font-size: 11px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s;
-      position: relative;
-    }
-
-    .options label:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
-    .options label:has(input:checked) {
-      color: var(--text-primary);
-    }
-
-    /* Custom checkboxes */
-    .options input[type="checkbox"],
-    .bottom-options input[type="checkbox"] {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 3px;
-      background: var(--checkbox-bg);
-      cursor: pointer;
-      position: relative;
-      flex-shrink: 0;
-      transition: all 0.15s;
-    }
-
-    .options input[type="checkbox"]:checked,
-    .bottom-options input[type="checkbox"]:checked {
-      background: var(--checkbox-checked);
-      border-color: var(--checkbox-checked);
-    }
-
-    .options input[type="checkbox"]:checked::after,
-    .bottom-options input[type="checkbox"]:checked::after {
-      content: '';
-      position: absolute;
-      left: 3.5px;
-      top: 1px;
-      width: 4px;
-      height: 7px;
-      border: solid var(--bg-primary);
-      border-width: 0 1.5px 1.5px 0;
-      transform: rotate(45deg);
-    }
-
-    /* Clear button */
-    button#btn {
-      width: 100%;
-      padding: 10px 16px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-family: var(--font-sans);
+      border-radius: 999px;
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--text-2);
       cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
 
-    button#btn::before {
-      content: '';
+    .scope-chip:hover { border-color: var(--border-strong); color: var(--text); }
+
+    /* Visually hidden but still focusable and announced */
+    .scope-chip input {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      width: 1px;
+      height: 1px;
+      opacity: 0;
       pointer-events: none;
     }
 
-    button#btn:hover {
-      filter: brightness(1.1);
-      box-shadow: 0 4px 20px var(--accent-glow);
-      transform: translateY(-1px);
-    }
+    .scope-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    button#btn:active {
-      transform: translateY(0) scale(0.99);
-      filter: brightness(0.95);
-    }
-
-    button#btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-      filter: none;
-      box-shadow: none;
-    }
-
-    /* Bottom options */
-    .bottom-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-    }
-
-    .bottom-options label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      font-weight: 400;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: color 0.15s;
-      white-space: nowrap;
-    }
-
-    .bottom-options label:hover {
-      color: var(--text-secondary);
-    }
-
-    .bottom-options input[type="checkbox"] {
-      width: 12px;
-      height: 12px;
-    }
-
-    .bottom-options input[type="checkbox"]:checked::after {
-      left: 2.5px;
-      top: 0.5px;
-      width: 3.5px;
-      height: 6px;
-    }
-
-    /* Status */
-    #status {
-      margin-top: 10px;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .result-item {
-      padding: 2px 0;
-      font-weight: 500;
-      animation: slideIn 0.25s ease both;
-    }
-
-    .result-ok { color: var(--success); }
-    .result-err { color: var(--error); }
-
-    .success-flash {
-      font-weight: 600;
-      font-size: 12px;
-      text-align: center;
-      padding: 6px 0;
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    /* Keyboard shortcut hint */
-    .shortcut-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 8px;
-      font-size: 9px;
-      color: var(--text-muted);
-      letter-spacing: 0.3px;
-    }
-
-    .shortcut-label {
-      white-space: nowrap;
-    }
-
-    .shortcut-recorder {
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
-      padding: 3px 8px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-      min-width: 70px;
-      justify-content: center;
-    }
-
-    .shortcut-recorder:hover {
-      background: var(--bg-hover);
-      border-color: var(--text-muted);
-    }
-
-    .shortcut-recorder.recording {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
-      animation: pulse 1.5s ease infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 2px var(--accent-dim); }
-      50% { box-shadow: 0 0 0 4px var(--accent-dim); }
-    }
-
-    .shortcut-recorder kbd {
-      display: inline-block;
-      padding: 1px 5px;
-      font-family: inherit;
-      font-size: 8.5px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      line-height: 1.4;
-    }
-
-    .shortcut-recorder .recording-text {
-      font-size: 9px;
+    .scope-chip:has(input:checked) {
+      background: var(--accent-soft);
+      border-color: var(--accent-line);
       color: var(--accent);
-      font-weight: 500;
     }
 
-    .shortcut-reset {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 13px;
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 3px;
-      transition: all 0.15s;
-      font-family: inherit;
-      line-height: 1;
-    }
-
-    .shortcut-reset:hover {
-      color: var(--text-secondary);
-      background: var(--bg-hover);
-    }
-
-    /* Loader picker */
-    .loader-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      font-size: 9px;
-      color: var(--text-muted);
-    }
-
-    .loader-label {
-      white-space: nowrap;
-      letter-spacing: 0.3px;
-    }
-
-    .loader-options {
-      display: flex;
-      gap: 3px;
-    }
-
-    .loader-pick {
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.15s;
-      padding: 0;
-      font-family: inherit;
-      line-height: 1;
-    }
-
-    .loader-pick:hover {
-      background: var(--bg-hover);
-      border-color: var(--text-muted);
-      transform: scale(1.1);
-    }
-
-    .loader-pick.active {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-      color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
-    }
+    .scope-chip .icon-check,
+    .scope-chip:has(input:checked) .icon-plus { display: none; }
+    .scope-chip:has(input:checked) .icon-check { display: block; }
 
     /* Recent domains */
-    .recents-wrapper {
-      margin-bottom: 10px;
-    }
+    .recents { display: flex; align-items: center; gap: 10px; min-width: 0; }
 
     .recents-list {
+      flex: 1;
+      min-width: 0;
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
+    .recents-list.is-overflowing { mask-image: linear-gradient(90deg, #000 80%, transparent); }
+
     .recent-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 8px;
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      background: var(--bg-secondary);
+      flex-shrink: 0;
+      max-width: 180px;
+      height: 26px;
+      padding: 0 9px;
       border: 1px solid var(--border);
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s;
-      max-width: 150px;
+      border-radius: 6px;
+      background: var(--surface);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--text-2);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
     }
 
-    .recent-chip:hover {
-      background: var(--accent-dim);
-      border-color: var(--tag-border);
+    .recent-chip:hover { border-color: var(--accent-line); color: var(--accent); }
+
+    /* Clipped by the scroll container otherwise */
+    .recent-chip:focus-visible { outline-offset: -2px; }
+
+    .recents .text-btn { color: var(--text-3); }
+    .recents .text-btn:hover { color: var(--err); }
+
+    /* Data type tiles */
+    .select-actions { display: flex; gap: 2px; margin-left: auto; }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .type-tile {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-3);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .type-tile:hover { border-color: var(--border-strong); color: var(--text-2); }
+
+    .type-tile:has(input:checked) {
+      background: var(--surface);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .type-tile:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .type-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .type-badge {
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-2);
+    }
+
+    .checkbox {
+      appearance: none;
+      position: relative;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .checkbox:checked { background: var(--accent-fill); border-color: var(--accent-fill); }
+
+    .checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 3.75px;
+      top: 1px;
+      width: 3.5px;
+      height: 7px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* The tile carries the focus ring */
+    .checkbox:focus-visible { outline: none; }
+
+    /* Switches */
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+      font-size: 12px;
+      color: var(--text-2);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .switch:hover { color: var(--text); }
+
+    .switch-input {
+      appearance: none;
+      position: relative;
+      flex-shrink: 0;
+      width: 28px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--border-strong);
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+
+    .switch-input::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--text-3);
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .switch-input:checked { background: var(--accent-fill); box-shadow: inset 0 0 0 1px var(--accent-fill); }
+    .switch-input:checked::before { transform: translateX(12px); background: #fff; }
+
+    /* Main action */
+    .action-area { display: flex; flex-direction: column; gap: 12px; }
+
+    .quick-switches { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+
+    .form-error { font-size: 12px; color: var(--err); }
+
+    .cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      height: 44px;
+      padding: 0 10px 0 16px;
+      border-radius: 10px;
+      background: var(--accent-fill);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: filter 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+
+    .cta:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 6px 20px var(--accent-glow); }
+    .cta:active:not(:disabled) { transform: scale(0.99); }
+    .cta:disabled { cursor: progress; opacity: 0.85; }
+
+    .cta-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+
+    .cta-icon-busy { display: none; animation: spin 0.8s linear infinite; }
+    .cta[aria-busy="true"] .cta-icon-busy { display: block; }
+    .cta[aria-busy="true"] .cta-icon-idle { display: none; }
+
+    .cta-keys { display: flex; gap: 3px; }
+
+    kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 5px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .cta-keys kbd { background: rgba(255, 255, 255, 0.18); color: #fff; }
+
+    /* Results */
+    .results-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--ok-soft);
+      border: 1px solid var(--ok-line);
+      border-radius: 10px;
+    }
+
+    .results-banner.is-error { background: var(--err-soft); border-color: var(--accent-line); }
+
+    .results-banner-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--ok);
+    }
+
+    .results-banner.is-error .results-banner-icon { color: var(--err); }
+    .results-banner .icon-err,
+    .results-banner.is-error .icon-ok { display: none; }
+    .results-banner.is-error .icon-err { display: block; }
+
+    .results-banner-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .results-title { font-size: 13.5px; font-weight: 600; }
+    .results-sub { font-size: 11.5px; color: var(--text-2); }
+
+    .results-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .result-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      animation: fade-up 0.2s ease both;
+    }
+
+    .result-head { display: flex; align-items: center; gap: 8px; }
+
+    .result-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+
+    .result-domain {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+    }
+
+    .result-score { font-family: var(--font-mono); font-size: 11px; color: var(--ok); }
+    .result-card.has-error .result-dot { background: var(--err); }
+    .result-card.has-error .result-score { color: var(--err); }
+
+    .result-items { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; }
+
+    .result-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .result-item svg { width: 10px; height: 10px; }
+    .result-item.is-ok { background: var(--ok-soft); color: var(--ok); }
+    .result-item.is-err { background: var(--err-soft); color: var(--err); }
+
+    .result-error {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: var(--err);
+      overflow-wrap: anywhere;
+    }
+
+    /* Settings */
+    .card {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 8px 8px 8px 12px;
+    }
+
+    .card-row + .card-row { border-top: 1px solid var(--border); }
+    label.card-row { gap: 12px; padding-right: 12px; cursor: pointer; }
+
+    .row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .row-label { font-size: 12.5px; color: var(--text); }
+    .row-hint { font-size: 11.5px; color: var(--text-3); }
+    .row-hint.is-active { color: var(--accent); }
+
+    .select-wrap { position: relative; display: flex; margin-left: auto; }
+
+    .select {
+      appearance: none;
+      height: 30px;
+      padding: 0 28px 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface-2);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .select-wrap svg { position: absolute; top: 8px; right: 8px; color: var(--text-3); pointer-events: none; }
+
+    .shortcut-recorder {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 32px;
+      padding: 0 7px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      transition: border-color 0.15s;
+    }
+
+    .shortcut-recorder:hover { border-color: var(--border-strong); }
+    .shortcut-recorder.recording { border-color: var(--accent); animation: pulse 1.4s ease infinite; }
+    .shortcut-recorder kbd { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+
+    .loader-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .loader-pick {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 56px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .loader-pick:hover { border-color: var(--border-strong); color: var(--text); }
+
+    .loader-pick.active {
+      background: var(--accent-soft);
+      border-color: var(--accent-line);
       color: var(--accent);
     }
 
-    .clear-recents {
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      text-decoration: none;
-      padding: 2px 7px;
-      border-radius: 3px;
-      transition: all 0.15s;
-    }
+    .settings-footer { font-size: 11.5px; color: var(--text-3); }
+    .settings-footer a { color: var(--accent); text-decoration: none; }
+    .settings-footer a:hover { text-decoration: underline; }
 
-    .clear-recents:hover {
-      color: var(--error);
-      background: var(--bg-hover);
-    }
-
-    /* Cookie counter */
-    .cookie-count {
-      display: block;
-      margin-top: 4px;
-      font-size: 10px;
-      color: var(--text-muted);
-      min-height: 14px;
-    }
-
-    /* Confirmation modal */
+    /* Confirmation dialog */
     .confirm-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.6);
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: fadeIn 0.15s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      padding: 24px;
+      background: var(--overlay);
+      animation: fade-in 0.15s ease;
     }
 
     .confirm-content {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      text-align: center;
-      width: 260px;
-    }
-
-    .confirm-content p {
-      font-size: 12px;
-      color: var(--text-primary);
-      margin-bottom: 14px;
-    }
-
-    .confirm-actions {
       display: flex;
-      gap: 8px;
-    }
-
-    .confirm-yes {
-      flex: 1;
-      padding: 7px 12px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      font-family: var(--font-sans);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .confirm-yes:hover {
-      filter: brightness(1.1);
-    }
-
-    .confirm-no {
-      flex: 1;
-      padding: 7px 12px;
-      background: var(--bg-tertiary);
-      color: var(--text-secondary);
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      padding: 20px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 5px;
-      font-family: var(--font-sans);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      animation: dialog-in 0.16s ease-out;
     }
 
-    .confirm-no:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
+    .confirm-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .confirm-copy { display: flex; flex-direction: column; gap: 6px; }
+    .confirm-copy h2 { font-size: 15px; font-weight: 650; }
+    .confirm-copy p { font-size: 12.5px; line-height: 1.5; color: var(--text-2); }
+
+    .confirm-domains { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .confirm-domain {
+      max-width: 100%;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 6px;
+      background: var(--surface-2);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 24px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .confirm-actions { display: flex; gap: 8px; margin-top: 2px; }
+
+    .confirm-actions button {
+      flex: 1;
+      height: 38px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .confirm-no { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+    .confirm-no:hover { border-color: var(--border-strong); }
+    .confirm-yes { background: var(--accent-fill); color: #fff; }
+    .confirm-yes:hover { filter: brightness(1.08); }
+
+    @keyframes tag-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 2px var(--accent-soft); } 50% { box-shadow: 0 0 0 5px var(--accent-soft); } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes dialog-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <img src="icons/icon-48.png" alt="" />
-      <h3>Clear Domain Data</h3>
-      <span class="version-tag">v1.4</span>
-      <select id="langSelect" class="lang-select">
-        <option value="en">EN</option>
-        <option value="fr">FR</option>
-        <option value="es">ES</option>
-        <option value="de">DE</option>
-        <option value="pt">PT</option>
-      </select>
-    </div>
-
-    <div id="recentsWrapper" class="recents-wrapper" style="display:none;">
-      <div class="section-header">
-        <span class="section-label">Recent</span>
-        <a id="clearRecents" class="clear-recents">Clear</a>
-      </div>
-      <div id="recentsList" class="recents-list"></div>
-    </div>
-
-    <div class="input-group">
-      <div id="domainTags" class="domain-tags"></div>
-      <div class="domain-input-row">
-        <input type="text" id="domain" class="domain-input" placeholder="example.com" spellcheck="false" autocomplete="off" />
-        <button type="button" id="addDomain" class="add-domain-btn" title="Add domain">+</button>
-      </div>
-      <span id="cookieCount" class="cookie-count"></span>
-    </div>
-
-    <div class="protocol-toggle">
-      <label class="toggle-chip">
-        <input type="checkbox" id="includeHttp" /> HTTP
-      </label>
-      <label class="toggle-chip">
-        <input type="checkbox" id="includeSubdomains" /> Subdomains
-      </label>
-    </div>
-
-    <div class="section-header">
-      <span class="section-label">Data types</span>
-      <div class="select-actions">
-        <a id="selectAll">All</a>
-        <a id="selectNone">None</a>
-      </div>
-    </div>
-
-    <div class="options">
-      <label><input type="checkbox" class="opt" value="cache" checked /> Cache</label>
-      <label><input type="checkbox" class="opt" value="cookies" checked /> Cookies</label>
-      <label><input type="checkbox" class="opt" value="localStorage" checked /> localStorage</label>
-      <label><input type="checkbox" class="opt" value="indexedDB" checked /> IndexedDB</label>
-      <label><input type="checkbox" class="opt" value="serviceWorkers" checked /> SW</label>
-      <label><input type="checkbox" class="opt" value="cacheStorage" checked /> CacheStorage</label>
-      <label><input type="checkbox" class="opt" value="sessionStorage" checked /> sessionStorage</label>
-      <label><input type="checkbox" class="opt" value="history" /> History</label>
-    </div>
-
-    <button id="btn">Clear selected data</button>
-
-    <div class="bottom-options">
-      <label><input type="checkbox" id="autoReload" checked /> Reload tab</label>
-      <label><input type="checkbox" id="autoClose" checked /> Auto-close</label>
-      <label><input type="checkbox" id="confirmClear" /> Confirm before clear</label>
-      <label><input type="checkbox" id="showNotification" checked /> Notify on shortcut</label>
-    </div>
-
-    <div id="status"></div>
-
-    <div class="loader-row">
-      <span class="loader-label">Loader:</span>
-      <div class="loader-options" id="loaderOptions">
-        <button class="loader-pick active" data-loader="spinner" title="Spinner">⟳</button>
-        <button class="loader-pick" data-loader="pacman" title="Pac-Man">ᗧ</button>
-        <button class="loader-pick" data-loader="broom" title="Broom">🧹</button>
-        <button class="loader-pick" data-loader="matrix" title="Matrix">⌨</button>
-        <button class="loader-pick" data-loader="nuke" title="Nuke">💥</button>
-        <button class="loader-pick" data-loader="fire" title="Fire">🔥</button>
-        <button class="loader-pick" data-loader="bounce" title="Bounce">●</button>
-      </div>
-    </div>
-
-    <div class="shortcut-row">
-      <span class="shortcut-label">Quick clear:</span>
-      <button id="shortcutBtn" class="shortcut-recorder" title="Click to record a new shortcut">
-        <span id="shortcutKeys"><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>X</kbd></span>
+  <header class="header">
+    <div id="headerMain" class="header-row">
+      <img src="icons/icon-48.png" alt="" class="header-logo" />
+      <h1 class="header-title">Clear Domain Data</h1>
+      <span id="versionTag" class="version-tag"></span>
+      <button type="button" id="openSettings" class="icon-btn header-action" data-i18n-aria="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
       </button>
-      <button id="shortcutReset" class="shortcut-reset" title="Reset to default">↺</button>
     </div>
+    <div id="headerSettings" class="header-row" hidden>
+      <button type="button" id="closeSettings" class="icon-btn back-btn" data-i18n-aria="back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      </button>
+      <h1 class="header-title" data-i18n="settings">Settings</h1>
+    </div>
+  </header>
 
-    <div id="confirmModal" class="confirm-modal" style="display:none;">
-      <div class="confirm-content">
-        <p>Clear data for <strong id="confirmDomain"></strong>?</p>
-        <div class="confirm-actions">
-          <button id="confirmYes" class="confirm-yes">Clear</button>
-          <button id="confirmNo" class="confirm-no">Cancel</button>
+  <main id="viewMain" class="view">
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-label" data-i18n="domains">Domains</h2>
+        <span id="domainMeta" class="section-meta"></span>
+      </div>
+      <div class="domain-field">
+        <div id="domainTags" class="domain-tags"></div>
+        <div class="domain-input-row">
+          <label for="domain" class="sr-only" data-i18n="addDomainBtn">Add domain</label>
+          <input type="text" id="domain" class="domain-input" placeholder="Add a domain…" data-i18n-placeholder="addDomain" spellcheck="false" autocomplete="off" />
+          <button type="button" id="addDomain" class="icon-btn add-domain-btn" data-i18n-aria="addDomainBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          </button>
         </div>
+      </div>
+      <div class="scope-row">
+        <label class="scope-chip">
+          <input type="checkbox" id="includeHttp" />
+          <svg class="icon-plus" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <svg class="icon-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          <span data-i18n="http">Include HTTP</span>
+        </label>
+        <label class="scope-chip">
+          <input type="checkbox" id="includeSubdomains" />
+          <svg class="icon-plus" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <svg class="icon-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          <span data-i18n="subdomains">Subdomains</span>
+        </label>
+      </div>
+    </section>
+
+    <section id="recentsWrapper" class="recents" aria-labelledby="recentsLabel" hidden>
+      <h2 id="recentsLabel" class="section-label" data-i18n="recentLabel">Recent</h2>
+      <div id="recentsList" class="recents-list"></div>
+      <button type="button" id="clearRecents" class="text-btn" data-i18n="clearRecents">Clear</button>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-label" data-i18n="dataTypes">Data types</h2>
+        <span id="typeCount" class="section-count"></span>
+        <div class="select-actions">
+          <button type="button" id="selectAll" class="text-btn" data-i18n="all">All</button>
+          <button type="button" id="selectNone" class="text-btn" data-i18n="none">None</button>
+        </div>
+      </div>
+      <div class="options">
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="cache" checked /><span class="type-label">Cache</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="cookies" checked /><span class="type-label">Cookies</span><span id="cookieCount" class="type-badge" hidden></span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="localStorage" checked /><span class="type-label">localStorage</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="indexedDB" checked /><span class="type-label">IndexedDB</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="serviceWorkers" checked /><span class="type-label">Service Workers</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="cacheStorage" checked /><span class="type-label">CacheStorage</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="sessionStorage" checked /><span class="type-label">sessionStorage</span></label>
+        <label class="type-tile"><input type="checkbox" class="checkbox opt" value="history" /><span class="type-label" data-i18n="history">History</span></label>
+      </div>
+    </section>
+
+    <div class="action-area">
+      <div class="quick-switches">
+        <label class="switch"><input type="checkbox" role="switch" id="autoReload" class="switch-input" checked /><span data-i18n="reloadTab">Reload tab</span></label>
+        <label class="switch"><input type="checkbox" role="switch" id="autoClose" class="switch-input" checked /><span data-i18n="autoClose">Auto-close</span></label>
+      </div>
+      <p id="formError" class="form-error" role="alert" hidden></p>
+      <button type="button" id="btn" class="cta" aria-busy="false">
+        <svg class="cta-icon-idle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        <svg class="cta-icon-busy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <span id="btnLabel" class="cta-label">Clear selected data</span>
+        <span id="ctaShortcut" class="cta-keys" aria-hidden="true"></span>
+      </button>
+    </div>
+  </main>
+
+  <main id="viewResults" class="view" hidden>
+    <div id="resultsBanner" class="results-banner" role="status">
+      <span class="results-banner-icon">
+        <svg class="icon-ok" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        <svg class="icon-err" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </span>
+      <div class="results-banner-text">
+        <span id="resultsTitle" class="results-title"></span>
+        <span id="resultsSub" class="results-sub"></span>
+      </div>
+    </div>
+    <div id="resultsList" class="results-list"></div>
+    <button type="button" id="resultsBack" class="secondary-btn" data-i18n="back">Back</button>
+  </main>
+
+  <main id="viewSettings" class="view" hidden>
+    <section class="section">
+      <h2 class="section-label" data-i18n="general">General</h2>
+      <div class="card">
+        <div class="card-row">
+          <label for="langSelect" class="row-label" data-i18n="language">Language</label>
+          <span class="select-wrap">
+            <select id="langSelect" class="select">
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="es">Español</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+            </select>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-label" data-i18n="behavior">Behavior</h2>
+      <div class="card">
+        <label class="card-row">
+          <span class="row-text">
+            <span class="row-label" data-i18n="confirmBefore">Ask for confirmation</span>
+            <span class="row-hint" data-i18n="confirmHint">Before each clear from the popup</span>
+          </span>
+          <input type="checkbox" role="switch" id="confirmClear" class="switch-input" />
+        </label>
+        <label class="card-row">
+          <span class="row-text">
+            <span class="row-label" data-i18n="notifyShortcut">Notify on shortcut</span>
+            <span class="row-hint" data-i18n="notifyHint">System notification after a keyboard clear</span>
+          </span>
+          <input type="checkbox" role="switch" id="showNotification" class="switch-input" checked />
+        </label>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-label" data-i18n="shortcutSection">Keyboard shortcut</h2>
+      <div class="card">
+        <div class="card-row">
+          <span class="row-text">
+            <span class="row-label" data-i18n="quickClear">Quick clear</span>
+            <span id="shortcutHint" class="row-hint" aria-live="polite"></span>
+          </span>
+          <button type="button" id="shortcutBtn" class="shortcut-recorder" data-i18n-aria="editShortcut">
+            <span id="shortcutKeys" class="cta-keys"></span>
+          </button>
+          <button type="button" id="shortcutReset" class="icon-btn" data-i18n-aria="resetShortcut">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-label" data-i18n="loader">Page animation</h2>
+      <div id="loaderOptions" class="loader-grid">
+        <button type="button" class="loader-pick" data-loader="spinner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          <span>Spinner</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="pacman">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.8 7.5A9 9 0 1 0 19.8 16.5L12 12Z"/><circle cx="11" cy="7" r="0.6"/></svg>
+          <span>Pac-Man</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="broom">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 3-8.5 8.5"/><path d="M10 9.5 14.5 14"/><path d="M10 9.5C6.5 10.5 4 13.5 3 19l2 2c5.5-1 8.5-3.5 9.5-7"/><path d="m7.5 21 1.5-3.5"/><path d="m3 16.5 3.5-1.5"/></svg>
+          <span data-i18n="ln_broom">Broom</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="matrix">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"/><path d="M12 19h8"/></svg>
+          <span>Matrix</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="nuke">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span>Nuke</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="fire">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <span data-i18n="ln_fire">Fire</span>
+        </button>
+        <button type="button" class="loader-pick" data-loader="bounce">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M5 20h14"/><path d="M12 14.5v2"/></svg>
+          <span data-i18n="ln_bounce">Bounce</span>
+        </button>
+      </div>
+    </section>
+
+    <p class="settings-footer">
+      <span id="versionFull"></span> ·
+      <a href="https://github.com/pOwn3d/clear-domain-data" target="_blank" rel="noopener" data-i18n="sourceCode">Source code</a>
+    </p>
+  </main>
+
+  <div id="confirmModal" class="confirm-modal" hidden>
+    <div class="confirm-content" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText">
+      <span class="confirm-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </span>
+      <div class="confirm-copy">
+        <h2 id="confirmTitle" data-i18n="confirmTitle">Clear data?</h2>
+        <p id="confirmText"></p>
+      </div>
+      <div id="confirmDomains" class="confirm-domains"></div>
+      <div class="confirm-actions">
+        <button type="button" id="confirmNo" class="confirm-no" data-i18n="confirmNo">Cancel</button>
+        <button type="button" id="confirmYes" class="confirm-yes" data-i18n="confirmYes">Clear</button>
       </div>
     </div>
   </div>
+
+  <template id="tplIconCheck"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></template>
+  <template id="tplIconX"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></template>
 
   <script src="popup.js"></script>
 </body>
