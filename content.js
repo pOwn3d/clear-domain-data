@@ -20,6 +20,10 @@ chrome.storage.onChanged.addListener((changes) => {
 });
 
 document.addEventListener("keydown", (e) => {
+  // Disconnected instance left by an extension reload/update (its runtime id is
+  // gone): the freshly injected copy handles the shortcut instead
+  if (!chrome.runtime?.id) return;
+
   const match =
     e.key.toLowerCase() === shortcut.key.toLowerCase() &&
     e.metaKey === !!shortcut.meta &&

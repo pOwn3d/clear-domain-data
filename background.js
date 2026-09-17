@@ -136,13 +136,27 @@ async function clearDomainData(domain, types, includeHttp, includeSubdomains) {
 }
 
 // Context menu: right-click "Clear data for this domain"
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   chrome.contextMenus.create({
     id: "clearDomainCtx",
     title: "Clear data for this domain",
     contexts: ["page"],
   });
+  if (details.reason === "install" || details.reason === "update") {
+    injectContentScriptIntoOpenTabs();
+  }
 });
+
+// Chrome only injects content scripts into pages loaded after install/update.
+// Tabs already open keep no script (install) or a disconnected one (update),
+// so the shortcut and the overlay did nothing there until a manual refresh.
+async function injectContentScriptIntoOpenTabs() {
+  const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
+  await Promise.all(tabs.filter(tab => !tab.discarded).map(tab =>
+    chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] })
+      .catch(e => console.warn(`[inject] content script not injected in tab ${tab.id} (${tab.url}):`, e.message))
+  ));
+}
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== "clearDomainCtx" || !tab?.url) return;

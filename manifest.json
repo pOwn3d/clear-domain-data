@@ -9,6 +9,7 @@
     "cookies",
     "history",
     "notifications",
+    "scripting",
     "storage",
     "tabs"
   ],
