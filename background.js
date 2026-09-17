@@ -154,7 +154,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     const stored = await chrome.storage.local.get(STORAGE_KEY);
     const prefs = stored[STORAGE_KEY] || {};
     const types = prefs.types || ALL_TYPES;
-    const includeHttp = prefs.includeHttp || false;
+    // An http:// page stores its data under the http origin: always include it,
+    // as the popup does when it pre-fills the domain
+    const includeHttp = prefs.includeHttp || url.protocol === "http:";
     const includeSubdomains = prefs.includeSubdomains || false;
 
     sendOverlay(tab.id, "clearing");
@@ -208,7 +210,8 @@ async function handleShortcutClear(tabId) {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   const prefs = stored[STORAGE_KEY] || {};
   const types = prefs.types || ALL_TYPES;
-  const includeHttp = prefs.includeHttp || false;
+  // Same as the context menu: an http:// page needs its http origin cleared
+  const includeHttp = prefs.includeHttp || url.protocol === "http:";
   const includeSubdomains = prefs.includeSubdomains || false;
 
   sendOverlay(tab.id, "clearing");
