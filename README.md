@@ -32,7 +32,7 @@ Chrome's built-in "Clear browsing data" wipes **everything** across all domains.
 
 ## What gets cleared
 
-| Data type | API |
+| Data type | How |
 |---|---|
 | Network cache | `browsingData.removeCache()` |
 | Cookies | `browsingData.removeCookies()` |
@@ -40,22 +40,27 @@ Chrome's built-in "Clear browsing data" wipes **everything** across all domains.
 | IndexedDB | `browsingData.removeIndexedDB()` |
 | Service Workers | `browsingData.removeServiceWorkers()` |
 | Cache Storage (PWA) | `browsingData.removeCacheStorage()` |
+| sessionStorage | Content script, in the tab the clear was started from |
+| History | `history.deleteUrl()` for URLs on that exact host |
 
-Each type can be toggled individually via checkboxes.
+Each type can be toggled individually.
 
 ## Features
 
-- **Auto-detects** the active tab's domain (with protocol detection)
-- **Manual input** — type any domain including `localhost` and IP addresses
-- **Granular selection** — pick exactly which data types to clear
-- **HTTP + HTTPS** support
-- **Auto-reload** — optionally reloads the active tab after clearing
-- **Per-item feedback** — see what succeeded and what failed
-- **Dark mode** — follows your system theme
-- **Keyboard friendly** — press Enter to submit
-- **Parallel clearing** — all data types are cleared simultaneously
-- **Secure** — strict CSP, input validation, no `innerHTML`
-- **Lightweight** — zero dependencies, ~6KB total
+- **Three ways to clear** — popup button, keyboard shortcut, or right-click → *Clear data for this domain*
+- **Auto-detects** the active tab's domain, and includes the `http://` origin on http pages
+- **Several domains at once** — add domains as tags, `localhost` and IP addresses with port included
+- **Recent domains** — one click to add a domain you cleared before
+- **Subdomains** — optionally removes cookies set on subdomains too
+- **Auto-reload** — reloads the tab to the site root, so a redirecting page (e.g. a login) doesn't trap you
+- **Auto-close** — the popup closes at once and the clear finishes in the background
+- **Per-domain results** — when auto-close is off, see what succeeded and what failed
+- **Customizable shortcut** — default `⌘ ⇧ X` on macOS (`Win + Shift + X` elsewhere)
+- **Page animation** — seven loaders shown on the page while clearing
+- **Optional confirmation** before popup clears, and **system notifications** after shortcut / context menu clears
+- **5 languages** — English, French, Spanish, German, Portuguese
+- **Light and dark themes** — follows your system
+- **Works in tabs opened before an install or update** — the content script is injected again
 
 ## Installation
 
@@ -79,34 +84,44 @@ git clone https://github.com/pOwn3d/clear-domain-data.git
 ## Usage
 
 1. Click the extension icon in your toolbar
-2. The current tab's domain is pre-filled — edit it if needed
-3. Check/uncheck the data types you want to clear
-4. Click **"Clear selected data"**
-5. Each item shows `[OK]` or `[ERR]` with details
-6. The tab auto-reloads if the option is enabled
+2. The current tab's domain is pre-filled — add or remove domains if needed
+3. Pick the data types to clear
+4. Click **"Clear selected data"** (or press the shortcut shown on the button)
+
+Language, confirmation, notifications, shortcut and page animation live in the **Settings** view (icon at the top right of the popup).
 
 ## Permissions
 
 | Permission | Why |
 |---|---|
 | `browsingData` | Core functionality — clear domain-specific data |
-| `tabs` | Read the active tab's URL to pre-fill the domain and reload |
-| `host_permissions: <all_urls>` | Required by `browsingData` to target any origin |
+| `cookies` | Count cookies for the domain and remove subdomain cookies |
+| `history` | Clear the domain's history entries |
+| `tabs` | Read the active tab's URL to pre-fill the domain, and reload it |
+| `scripting` | Inject the content script into tabs already open when the extension is installed or updated |
+| `contextMenus` | Right-click *Clear data for this domain* |
+| `notifications` | Feedback after a shortcut or context menu clear |
+| `storage` | Preferences and recent domains |
+| `host_permissions: <all_urls>` | Target any origin with `browsingData`, and run the content script (shortcut, page animation, sessionStorage) |
 
-**No data is collected, transmitted, or stored. Everything runs locally.**
+**No data is collected or transmitted.** Preferences and recent domains stay in `chrome.storage.local`.
 
 ## Project structure
 
 ```
 clear-domain-data/
 ├── manifest.json      # Extension config (Manifest V3)
-├── background.js      # Service worker — handles clearing logic
-├── popup.html         # Popup UI with dark mode support
-├── popup.js           # Popup logic
+├── background.js      # Service worker — clearing, shortcut, context menu, reload
+├── content.js         # Keyboard shortcut, page animation, sessionStorage
+├── popup.html         # Popup UI (light and dark themes)
+├── popup.js           # Popup logic and translations
 ├── icons/
 │   ├── icon-16.png
+│   ├── icon-32.png
 │   ├── icon-48.png
-│   └── icon-128.png
+│   ├── icon-128.png
+│   ├── icon.svg       # Source of the 48 and 128 px icons
+│   └── icon-small.svg # Simplified source of the 16 and 32 px icons
 ├── LICENSE
 └── README.md
 ```
@@ -115,7 +130,7 @@ clear-domain-data/
 
 - Domain input validated against strict regex (supports domains, `localhost`, IPs)
 - Data types validated against whitelist
-- DOM updates use `textContent` / `createElement` — no `innerHTML`
+- Popup DOM built with `textContent` / `createElement` — user input is never inserted as HTML
 - Content Security Policy: `script-src 'self'; object-src 'none'`
 - Internal browser pages filtered out (`chrome://`, `edge://`, `about://`, etc.)
 - No external requests, no analytics, no tracking
