@@ -514,6 +514,7 @@
       targetDomains.forEach(domain => {
         chrome.runtime.sendMessage({
           action: "clearDomain", domain, types,
+          tabId: activeTabId,
           includeHttp: includeHttp.checked,
           includeSubdomains: includeSubdomains.checked,
           autoReload: autoReload.checked,
@@ -533,6 +534,7 @@
     targetDomains.forEach((domain, index) => {
       chrome.runtime.sendMessage({
         action: "clearDomain", domain, types,
+        tabId: activeTabId,
         includeHttp: includeHttp.checked,
         includeSubdomains: includeSubdomains.checked,
         // Popup stays open: it handles the reload itself (below) to avoid a

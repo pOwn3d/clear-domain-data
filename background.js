@@ -256,7 +256,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   if (msg.action === "clearDomain") {
     (async () => {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []);
+      // Use the tab the popup was opened on: querying the active tab from the
+      // service worker resolves to whichever window has focus at that moment
+      // (DevTools, another browser window), so overlay and reload missed the page
+      const tab = Number.isInteger(msg.tabId)
+        ? await chrome.tabs.get(msg.tabId).catch(e => {
+          console.warn(`[clearDomain] tab ${msg.tabId} unavailable:`, e.message);
+          return null;
+        })
+        : (await chrome.tabs.query({ active: true, currentWindow: true }).catch(() => []))[0];
       if (tab) sendOverlay(tab.id, "clearing");
 
       const results = await clearDomainData(msg.domain, msg.types, msg.includeHttp, msg.includeSubdomains);
